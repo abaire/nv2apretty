@@ -11,7 +11,7 @@ description = 'Visualizer for xemu/nv2a-trace XBOX GPU (nv2a) logs.'
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
-keywords = ["nv2a", "vertex shader", "assembler", "xbox", "nvidia"]
+keywords = ["nv2a", "xbox", "nvidia", "xemu"]
 authors = [
     { name = "Erik Abair", email = "erik.abair@bearbrains.work" },
 ]
