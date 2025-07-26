@@ -303,9 +303,9 @@ class CombinerState:
             return src, mapping
 
         def render_input(src: str, alpha: bool, mapping: str) -> str:
-            alpha = ".a" if alpha else ".rgb"
+            alpha_str = ".a" if alpha else ".rgb"
             src, mapping = fixup_input(src, mapping)
-            return f"{mapping}({src}{alpha})"
+            return f"{mapping}({src}{alpha_str})"
 
         for i in range(control.COUNT):
             ret.append(f"{i}:")
@@ -459,8 +459,8 @@ class CombinerState:
         ret.append(f"C0 = {ColorFactorBitField(self.final_combiner_constant0)}")
         ret.append(f"C1 = {ColorFactorBitField(self.final_combiner_constant1)}")
         if flags:
-            flags = ", ".join(flags)
-            ret.append(f"Flags = {flags}")
+            flags_str = ", ".join(flags)
+            ret.append(f"Flags = {flags_str}")
         ret.append(f"out.rgb = {d_component} + mix({c_component}, {b_component}, {a_component}")
         ret.append(f"out.a = {g_component}")
         ret.append("")

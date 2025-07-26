@@ -40,7 +40,7 @@ from nv2apretty.deep_processing import process_shader_stage_program
 from nv2apretty.subprocessors.frame_summary import FrameSummary
 
 if TYPE_CHECKING:
-    from sys import TextIO
+    from typing import TextIO
 
 logger = logging.getLogger(__name__)
 
@@ -202,7 +202,7 @@ def _process_file(
     summary_output_stream: TextIO = sys.stderr,
 ) -> None:
     inside_begin_end = False
-    elided_commands = defaultdict(list)
+    elided_commands: dict[tuple[int, int, int], list[int]] = defaultdict(list)
 
     shader_program: list[int] = []
 
@@ -308,7 +308,8 @@ def _process_file(
             elif block_marker == Tag.BEGIN_TAG and explain_combiners:
                 raw(current_frame_summary.combiner_state.explain())
             elif block_marker == Tag.PIPELINE:
-                current_frame_summary.pipeline = summary_text
+                if summary_text:
+                    current_frame_summary.pipeline = summary_text
             elif summary_text:
                 current_frame_summary.draw_summary_messages.append(summary_text)
 
@@ -347,7 +348,8 @@ def _process_file(
                 current_frame_summary.draw_summary_messages.clear()
 
                 if current_frame_summary.pipeline == "Programmable":
-                    current_frame_summary.draws_by_programmable_shader[current_frame_summary.active_shader] += 1
+                    if current_frame_summary.active_shader:
+                        current_frame_summary.draws_by_programmable_shader[current_frame_summary.active_shader] += 1
                 else:
                     current_frame_summary.unique_fixed_function_shaders.add(
                         str(current_frame_summary.fixed_function_shader_state)
