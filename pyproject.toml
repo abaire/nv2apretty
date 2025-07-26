@@ -49,13 +49,13 @@ extra-dependencies = [
     "mypy>=1.14.1",
 ]
 [tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/nv2apretty tests}"
+check = "mypy --install-types --non-interactive {args:src/nv2apretty}"
 
 [tool.mypy]
 disable_error_code = ["import-untyped", "import-not-found"]
 
 [tool.coverage.run]
-source_pkgs = ["nv2apretty", "tests"]
+source_pkgs = ["nv2apretty"]
 branch = true
 parallel = true
 omit = [
@@ -64,7 +64,6 @@ omit = [
 
 [tool.coverage.paths]
 xemu_nv2a_prettifier = ["src/nv2apretty"]
-tests = ["tests"]
 
 [tool.coverage.report]
 exclude_lines = [
