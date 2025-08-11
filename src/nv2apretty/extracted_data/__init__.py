@@ -2034,6 +2034,10 @@ def _expand_processors(
     flat_names: dict[tuple[int, int], str] = {}
 
     def _insert(key: tuple[int, int], processor: ProcessorFunc, name: str):
+        if key in flat_names:
+            msg = f"Colliding key '{key}': old name: '{flat_names[key]}' new name: '{name}'"
+            raise ValueError(msg)
+
         flat_processors[key] = processor
         flat_names[key] = name
 
@@ -2963,7 +2967,7 @@ _PROCESSORS, _NAME_MAP = _expand_processors(
             StateArray(NV097_SET_TEXTURE_IMAGE_RECT, 0x40, 4): _generate_process_double_uint16("H", "W"),
             StateArray(NV097_SET_TEXTURE_PALETTE, 0x40, 4): _process_set_texture_palette,
             StateArray(NV097_SET_TEXTURE_BORDER_COLOR, 0x40, 4): _process_passthrough,
-            StructStateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_MAT, 0x40, 4, 0x4, 16): _process_passthrough,
+            StructStateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_MAT, 0x40, 4, 0x4, 4): _process_passthrough,
             StateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE, 0x40, 4): _process_passthrough,
             StateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET, 0x40, 4): _process_passthrough,
             NV097_SET_SEMAPHORE_OFFSET: _process_passthrough,
