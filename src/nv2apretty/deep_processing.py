@@ -140,18 +140,6 @@ def _process_set_dot_rgbmapping(_nv_class, _nv_op, nv_param):
     return param_info + f" {fmt}"
 
 
-# _PROCESSORS = _expand_processors(
-
-
-#         (0x97, NV097_SET_ZMIN_MAX_CONTROL): _process_set_zmin_max_control,
-#         (0x97, NV097_SET_ANTI_ALIASING_CONTROL): _process_set_anti_aliasing_control,
-#         (0x97, NV097_SET_OCCLUDE_ZSTENCIL_EN): _process_set_occlude_zstencil,
-
-#         (0x97, NV097_SET_DOT_RGBMAPPING): _process_set_dot_rgbmapping,
-
-#         (0x97, NV097_SET_TRANSFORM_EXECUTION_MODE): _process_transform_execution_mode,
-
-
 def expand_vertex_data_format(nv_param):
     param_info = "0x%X" % nv_param
 

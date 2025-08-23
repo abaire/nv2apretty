@@ -1315,6 +1315,8 @@ def _process_set_texgen_q(_nv_class, _nv_op, nv_param):
 
 NV012_SET_BETA = 0x300
 NV012_SET_OBJECT = 0x0
+NV019_CONTEXT_CLIP_RECTANGLE_SET_POINT = 0x300
+NV019_CONTEXT_CLIP_RECTANGLE_SET_SIZE = 0x304
 NV044_SET_MONOCHROME_COLOR0 = 0x310
 NV062_SET_COLOR_FORMAT = 0x300
 NV062_SET_CONTEXT_DMA_IMAGE_DESTIN = 0x188
@@ -1566,6 +1568,8 @@ NV09F_SIZE = 0x308
 _SPARSE_NAME_MAP = {
     (0x12, 0x0): "NV012_SET_OBJECT",
     (0x12, 0x300): "NV012_SET_BETA",
+    (0x19, 0x300): "NV019_CONTEXT_CLIP_RECTANGLE_SET_POINT",
+    (0x19, 0x304): "NV019_CONTEXT_CLIP_RECTANGLE_SET_SIZE",
     (0x44, 0x310): "NV044_SET_MONOCHROME_COLOR0",
     (0x62, 0x0): "NV062_SET_OBJECT",
     (0x62, 0x184): "NV062_SET_CONTEXT_DMA_IMAGE_SOURCE",
@@ -2755,6 +2759,10 @@ _PROCESSORS, _NAME_MAP = _expand_processors(
         0x12: {
             NV012_SET_OBJECT: _process_passthrough,
             NV012_SET_BETA: _process_passthrough,
+        },
+        0x19: {
+            NV019_CONTEXT_CLIP_RECTANGLE_SET_POINT: _process_passthrough,
+            NV019_CONTEXT_CLIP_RECTANGLE_SET_SIZE: _process_passthrough,
         },
         0x44: {
             NV044_SET_MONOCHROME_COLOR0: _process_passthrough,
