@@ -2761,8 +2761,8 @@ _PROCESSORS, _NAME_MAP = _expand_processors(
             NV012_SET_BETA: _process_passthrough,
         },
         0x19: {
-            NV019_CONTEXT_CLIP_RECTANGLE_SET_POINT: _process_passthrough,
-            NV019_CONTEXT_CLIP_RECTANGLE_SET_SIZE: _process_passthrough,
+            NV019_CONTEXT_CLIP_RECTANGLE_SET_POINT: _generate_process_double_uint16("X", "Y"),
+            NV019_CONTEXT_CLIP_RECTANGLE_SET_SIZE: _generate_process_double_uint16("W", "H"),
         },
         0x44: {
             NV044_SET_MONOCHROME_COLOR0: _process_passthrough,
