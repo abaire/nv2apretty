@@ -35,7 +35,7 @@ from xml.sax import saxutils
 
 from nv2a_vsh import disassemble
 
-from nv2apretty import deep_processing
+from nv2apretty import deep_processing, pvideo
 from nv2apretty.deep_processing import process_shader_stage_program
 from nv2apretty.subprocessors.frame_summary import FrameSummary
 
@@ -260,6 +260,8 @@ def _process_file(
 
         match = _PVIDEO_REG_WRITE_RE.match(line)
         if match:
+            entry = pvideo.process(int(match.group(1), 16), int(match.group(2)), int(match.group(3), 16))
+            raw("nv2a_reg_write PVIDEO " + entry)
             continue
 
         match = _PCRTC_REG_WRITE_RE.match(line)
