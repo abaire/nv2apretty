@@ -266,7 +266,7 @@ def _size_in(addr: int, size: int, val: int) -> str:
             return super().__new__(**kwargs)
 
         def __str__(self):
-            return f"{self.WIDTH} x {self.HEIGHT}"
+            return f"{self.WIDTH} x {self.HEIGHT} 2x1 texels"
 
     index = (addr - 0x928) // 4
     fmt = _BitField(val)
@@ -291,7 +291,7 @@ def _point_in(addr: int, size: int, val: int) -> str:
             return super().__new__(**kwargs)
 
         def __str__(self):
-            return f"{self.S}, {self.T}"
+            return f"{self.S >> 4}.{self.S & 0xF} (0x{self.S:X}), {self.T >> 3}.{self.T & 0x7} (0x{self.T:X})"
 
     index = (addr - 0x930) // 4
     fmt = _BitField(val)
