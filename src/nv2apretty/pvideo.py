@@ -317,7 +317,8 @@ def _ds_dx(addr: int, size: int, val: int) -> str:
         def __str__(self):
             if self.RATIO == 0x00100000:
                 return "UNITY"
-            return f"0x{self.RATIO:08x} ({self.RATIO})"
+
+            return f"{self.RATIO / (2**20)} (0x{self.RATIO:08x} {self.RATIO}))"
 
     index = (addr - 0x938) // 4
     fmt = _BitField(val)
@@ -343,7 +344,8 @@ def _dt_dy(addr: int, size: int, val: int) -> str:
         def __str__(self):
             if self.RATIO == 0x00100000:
                 return "UNITY"
-            return f"0x{self.RATIO:08x} ({self.RATIO})"
+
+            return f"{self.RATIO / (2**20)} (0x{self.RATIO:08x} {self.RATIO})"
 
     index = (addr - 0x940) // 4
     fmt = _BitField(val)
