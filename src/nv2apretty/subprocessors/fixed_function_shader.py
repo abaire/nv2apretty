@@ -26,7 +26,7 @@ def as_float(int_val: int) -> float:
 
 
 def _point_size_6_3_to_float(int_val: int) -> float:
-    return float(int_val) / 256.0
+    return float(int_val) / 8.0
 
 
 NV097_SET_TEXTURE_MATRIX_ENABLE_0 = 0x420
