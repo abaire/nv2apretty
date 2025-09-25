@@ -1,15 +1,38 @@
 from __future__ import annotations
 
+import struct
 from dataclasses import dataclass, field
+
+from nv2apretty.extracted_data import (
+    NV097_SET_COLOR_MATERIAL,
+    NV097_SET_FOG_ENABLE,
+    NV097_SET_FOG_GEN_MODE,
+    NV097_SET_LIGHT_CONTROL,
+    NV097_SET_LIGHT_ENABLE_MASK,
+    NV097_SET_LIGHTING_ENABLE,
+    NV097_SET_POINT_PARAMS,
+    NV097_SET_POINT_PARAMS_ENABLE,
+    NV097_SET_POINT_SIZE,
+    NV097_SET_POINT_SMOOTH_ENABLE,
+    NV097_SET_SKIN_MODE,
+    NV097_SET_SPECULAR_ENABLE,
+    NV097_SET_TWO_SIDE_LIGHT_EN,
+)
+
+
+def as_float(int_val: int) -> float:
+    packed_bytes = struct.pack("!I", int_val)
+    return struct.unpack("!f", packed_bytes)[0]
+
+
+def _point_size_6_3_to_float(int_val: int) -> float:
+    return float(int_val) / 256.0
+
 
 NV097_SET_TEXTURE_MATRIX_ENABLE_0 = 0x420
 NV097_SET_TEXTURE_MATRIX_ENABLE_1 = 0x424
 NV097_SET_TEXTURE_MATRIX_ENABLE_2 = 0x428
 NV097_SET_TEXTURE_MATRIX_ENABLE_3 = 0x42C
-
-NV097_SET_LIGHTING_ENABLE = 0x314
-NV097_SET_SKIN_MODE = 0x328
-NV097_SET_TWO_SIDE_LIGHT_EN = 0x17C4
 
 
 @dataclass
@@ -112,14 +135,14 @@ class TexGenState:
         ]
 
 
-NV097_SET_COLOR_MATERIAL = 0x298
-NV097_SET_LIGHT_CONTROL = 0x294
-NV097_SET_LIGHT_ENABLE_MASK = 0x3BC
-NV097_SET_SPECULAR_ENABLE = 0x3B8
-NV097_SET_FOG_ENABLE = 0x2A4
-NV097_SET_FOG_GEN_MODE = 0x2A0
-NV097_SET_POINT_PARAMS_ENABLE = 0x318
-NV097_SET_POINT_SIZE = 0x198C
+NV097_SET_POINT_PARAMS_SCALE_FACTOR_A = NV097_SET_POINT_PARAMS
+NV097_SET_POINT_PARAMS_SCALE_FACTOR_B = NV097_SET_POINT_PARAMS_SCALE_FACTOR_A + 4
+NV097_SET_POINT_PARAMS_SCALE_FACTOR_C = NV097_SET_POINT_PARAMS_SCALE_FACTOR_B + 4
+NV097_SET_POINT_PARAMS_SIZE_RANGE = NV097_SET_POINT_PARAMS_SCALE_FACTOR_C + 4
+NV097_SET_POINT_PARAMS_SIZE_RANGE_DUP_1 = NV097_SET_POINT_PARAMS_SIZE_RANGE + 4
+NV097_SET_POINT_PARAMS_SIZE_RANGE_DUP_2 = NV097_SET_POINT_PARAMS_SIZE_RANGE_DUP_1 + 4
+NV097_SET_POINT_PARAMS_SCALE_BIAS = NV097_SET_POINT_PARAMS_SIZE_RANGE_DUP_2 + 4
+NV097_SET_POINT_PARAMS_MIN_SIZE = NV097_SET_POINT_PARAMS_SCALE_BIAS + 4
 
 
 @dataclass
@@ -137,7 +160,14 @@ class FixedFunctionPipelineState:
     fog_enable: bool = False
     fog_gen_mode: int = 0
     point_params_enable: bool = False
+    point_smooth_enable: bool = False
     point_size: int = -1
+    point_scale_factor_a: int = -1
+    point_scale_factor_b: int = -1
+    point_scale_factor_c: int = -1
+    point_size_range: int = -1
+    point_scale_bias: int = -1
+    point_min_size: int = -1
 
     def update(self, nv_op: int, nv_param: int):
         if self.texgen_state.update(nv_op, nv_param):
@@ -151,6 +181,34 @@ class FixedFunctionPipelineState:
 
         if nv_op == NV097_SET_POINT_PARAMS_ENABLE:
             self.point_params_enable = bool(nv_param)
+            return
+
+        if nv_op == NV097_SET_POINT_PARAMS_SCALE_FACTOR_A:
+            self.point_scale_factor_a = nv_param
+            return
+
+        if nv_op == NV097_SET_POINT_PARAMS_SCALE_FACTOR_B:
+            self.point_scale_factor_b = nv_param
+            return
+
+        if nv_op == NV097_SET_POINT_PARAMS_SCALE_FACTOR_C:
+            self.point_scale_factor_c = nv_param
+            return
+
+        if nv_op == NV097_SET_POINT_PARAMS_SIZE_RANGE:
+            self.point_size_range = nv_param
+            return
+
+        if nv_op == NV097_SET_POINT_PARAMS_SCALE_BIAS:
+            self.point_scale_bias = nv_param
+            return
+
+        if nv_op == NV097_SET_POINT_PARAMS_MIN_SIZE:
+            self.point_min_size = nv_param
+            return
+
+        if nv_op == NV097_SET_POINT_SMOOTH_ENABLE:
+            self.point_smooth_enable = bool(nv_param)
             return
 
         if nv_op == NV097_SET_FOG_GEN_MODE:
@@ -209,7 +267,35 @@ class FixedFunctionPipelineState:
 
         ret.append(f"Point params enable: {self.point_params_enable}")
         if self.point_params_enable:
-            ret.append(f"\tPoint size: 0x{self.point_size:X}")
+            point_size = (
+                "<UNKNOWN>"
+                if self.point_size == -1
+                else f"{_point_size_6_3_to_float(self.point_size)} (0x{self.point_size:X})"
+            )
+            ret.append(f"\tPoint size: {point_size}")
+
+            point_scale_factor_a = (
+                "<UNKNOWN>" if self.point_scale_factor_a == -1 else f"{as_float(self.point_scale_factor_a)}"
+            )
+            point_scale_factor_b = (
+                "<UNKNOWN>" if self.point_scale_factor_b == -1 else f"{as_float(self.point_scale_factor_b)}"
+            )
+            point_scale_factor_c = (
+                "<UNKNOWN>" if self.point_scale_factor_c == -1 else f"{as_float(self.point_scale_factor_c)}"
+            )
+            ret.append(
+                f"\tSize multiplier: sqrt(1/({point_scale_factor_a} + {point_scale_factor_b} * Deye + {point_scale_factor_c} * (Deye^2))"
+            )
+
+            point_size_range = "<UNKNOWN>" if self.point_size_range == -1 else f"{as_float(self.point_size_range)}"
+            ret.append(f"\tSize range: {point_size_range}")
+            point_scale_bias = "<UNKNOWN>" if self.point_scale_bias == -1 else f"{as_float(self.point_scale_bias)}"
+            ret.append(f"\tScale bias: {point_scale_bias}")
+            point_min_size = "<UNKNOWN>" if self.point_min_size == -1 else f"{as_float(self.point_min_size)}"
+            ret.append(f"\tMinimum size: {point_min_size}")
+
+        if self.point_smooth_enable:
+            ret.append("Point smooth (point sprites) enabled")
 
         ret.append("TexGen: ")
         ret.extend([f"\t{item}" for item in self.texgen_state.data()])
