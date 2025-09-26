@@ -366,8 +366,9 @@ class CombinerState:
                 cd_dot = " dot " if output.CD_DOT else " * "
                 mux = f" `{mux_type}` " if output.MUX else " + "
 
-                ret.append(f"  C0 = {factor_0}")
-                ret.append(f"  C1 = {factor_1}")
+                if any(result != "Discard" or keep_discarded for result in (ab_dst, cd_dst, sum_dst)):
+                    ret.append(f"  C0 = {factor_0}")
+                    ret.append(f"  C1 = {factor_1}")
                 if ab_dst != "Discard" or keep_discarded:
                     ret.append(f"  {ab_dst}.{swizzle} = {render_op(a, b, output.AB_DOT, output.OP)}")
                 if cd_dst != "Discard" or keep_discarded:
