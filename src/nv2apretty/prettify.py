@@ -332,7 +332,7 @@ def _process_file(
             elif block_marker == Tag.END_TAG:
                 if summarize:
                     draw_summary(
-                        f"== Draw {current_frame_summary.frame_draw_count} summary: ============",
+                        f"== Draw {current_frame_summary.frame_draw_count - 1} summary: ============",
                         file=summary_output_stream,
                     )
                     draw_summary(f"  Pipeline: {current_frame_summary.pipeline}", file=summary_output_stream)
