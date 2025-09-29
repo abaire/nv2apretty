@@ -1070,13 +1070,6 @@ def _process_set_texture_address(_nv_class, nv_op, nv_param):
     return param_info + f" {fmt}"
 
 
-def _lod_bias_5_8_to_float(lod_bias) -> float:
-    lod_bias_5_8 = lod_bias
-    signed_5_8 = lod_bias_5_8 - (1 << 13) if (lod_bias_5_8 & (1 << 12)) else lod_bias_5_8
-
-    return float(signed_5_8) / 256.0
-
-
 def _process_set_texture_control0(_nv_class, _nv_op, nv_param):
     param_info = "0x%X" % nv_param
 
@@ -1117,8 +1110,8 @@ def _process_set_texture_control0(_nv_class, _nv_op, nv_param):
                 elements.append("ImageFieldEnabled")
 
             elements.append("MaxAniso:%d" % (1 << self.MAX_ANISO))
-            elements.append("MaxLOD:0x%X (%f)" % (self.MAX_LOD_CLAMP, _lod_bias_5_8_to_float(self.MAX_LOD_CLAMP)))
-            elements.append("MinLOD:0x%X (%f)" % (self.MIN_LOD_CLAMP, _lod_bias_5_8_to_float(self.MIN_LOD_CLAMP)))
+            elements.append("MaxLOD:%d" % self.MAX_LOD_CLAMP)
+            elements.append("MinLOD:%d" % self.MIN_LOD_CLAMP)
 
             return "{%s}" % ", ".join(elements)
 
@@ -1150,8 +1143,7 @@ def _process_set_texture_filter(_nv_class, _nv_op, nv_param):
         def __str__(self):
             elements = []
 
-            gl_lod_bias = _lod_bias_5_8_to_float(self.LOD_BIAS)
-            elements.append("LODBias:0x%X (%f)" % (self.LOD_BIAS, gl_lod_bias))
+            elements.append("LODBias:%d" % self.LOD_BIAS)
 
             if self.CONVOLUTION_KERNEL == 1:
                 elements.append("Quincunx")
@@ -3026,9 +3018,9 @@ _PROCESSORS, _NAME_MAP = _expand_processors(
             StateArray(NV097_SET_TEXTURE_IMAGE_RECT, 0x40, 4): _generate_process_double_uint16("H", "W"),
             StateArray(NV097_SET_TEXTURE_PALETTE, 0x40, 4): _process_set_texture_palette,
             StateArray(NV097_SET_TEXTURE_BORDER_COLOR, 0x40, 4): _process_passthrough,
-            StructStateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_MAT, 0x40, 4, 0x4, 4): _process_passthrough,
-            StateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE, 0x40, 4): _process_passthrough,
-            StateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET, 0x40, 4): _process_passthrough,
+            StructStateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_MAT, 0x40, 4, 0x4, 4): _process_float_param,
+            StateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE, 0x40, 4): _process_float_param,
+            StateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET, 0x40, 4): _process_float_param,
             NV097_SET_SEMAPHORE_OFFSET: _process_passthrough,
             NV097_BACK_END_WRITE_SEMAPHORE_RELEASE: _process_passthrough,
             NV097_SET_ZMIN_MAX_CONTROL: ParseNv097SetZminMaxControl,
