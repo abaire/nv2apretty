@@ -2041,6 +2041,11 @@ def _process_float_param(_nv_class, _nv_op, nv_param) -> str:
     return f"0x{nv_param:08X} => {float_val[0]}"
 
 
+def _process_x_3_fixed_point(_nv_class, _nv_op, nv_param: int) -> str:
+    """Treats the param as an x.3 fixed point value (no sign extension)."""
+    return f"0x{nv_param:08X} => {float(nv_param) / 8.0}"
+
+
 def _process_boolean_param(_nv_class, _nv_op, nv_param) -> str:
     """Treats the param value as a boolean."""
     if nv_param == 0:
@@ -2907,7 +2912,7 @@ CLASS_TO_COMMAND_PROCESSOR_MAP = {
         StateArray(NV097_SET_TEXGEN_R, 0x10, 4): _process_set_texgen_rst,
         StateArray(NV097_SET_TEXGEN_Q, 0x10, 4): _process_set_texgen_q,
         StateArray(NV097_SET_TEXTURE_MATRIX_ENABLE, 0x4, 4): _process_boolean_param,
-        NV097_SET_POINT_SIZE: _process_passthrough,
+        NV097_SET_POINT_SIZE: _process_x_3_fixed_point,
         StateArray(NV097_SET_PROJECTION_MATRIX, 0x4, 16): _process_float_param,
         StructStateArray(NV097_SET_MODEL_VIEW_MATRIX, 0x40, 4, 0x4, 16): _process_float_param,
         StructStateArray(NV097_SET_INVERSE_MODEL_VIEW_MATRIX, 0x40, 4, 0x4, 16): _process_float_param,
