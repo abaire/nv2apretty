@@ -3069,7 +3069,7 @@ CLASS_TO_COMMAND_PROCESSOR_MAP = {
 }
 
 # Mapping of graphics class to commands and processors.
-_PROCESSORS, _NAME_MAP = _expand_processors(CLASS_TO_COMMAND_PROCESSOR_MAP)
+PROCESSORS, _NAME_MAP = _expand_processors(CLASS_TO_COMMAND_PROCESSOR_MAP)
 
 
 @dataclass
@@ -3098,7 +3098,7 @@ class CommandInfo:
 
     def process(self):
         processor_key = (self.nv_class, self.nv_op)
-        processor = _PROCESSORS.get(processor_key)
+        processor = PROCESSORS.get(processor_key)
         if processor:
             self.param_info = processor(self.nv_class, self.nv_op, self.nv_param)
         else:
@@ -3107,7 +3107,7 @@ class CommandInfo:
 
 def get_command_info(channel: int, nv_class: int, nv_op: int, nv_param: int) -> CommandInfo:
     processor_key = (nv_class, nv_op)
-    if processor_key not in _PROCESSORS:
+    if processor_key not in PROCESSORS:
         return CommandInfo(channel, nv_class, nv_op, nv_param)
 
     op_name = _NAME_MAP.get(processor_key)

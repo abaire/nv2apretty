@@ -1,30 +1,53 @@
 from __future__ import annotations
 
+# ruff: noqa: PLR2004 Magic value used in comparison
+import re
 import struct
 from dataclasses import dataclass, field
 from typing import Any
 
 from nv2apretty.extracted_data import (
-    _PROCESSORS,
     CLASS_TO_COMMAND_PROCESSOR_MAP,
+    NV097_SET_BACK_LIGHT_AMBIENT_COLOR,
+    NV097_SET_BACK_LIGHT_DIFFUSE_COLOR,
+    NV097_SET_BACK_LIGHT_SPECULAR_COLOR,
+    NV097_SET_BACK_MATERIAL_ALPHA,
+    NV097_SET_BACK_MATERIAL_EMISSION,
+    NV097_SET_BACK_SCENE_AMBIENT_COLOR,
+    NV097_SET_BACK_SPECULAR_PARAMS,
     NV097_SET_COLOR_MATERIAL,
     NV097_SET_FOG_ENABLE,
     NV097_SET_FOG_GEN_MODE,
+    NV097_SET_LIGHT_AMBIENT_COLOR,
     NV097_SET_LIGHT_CONTROL,
+    NV097_SET_LIGHT_DIFFUSE_COLOR,
     NV097_SET_LIGHT_ENABLE_MASK,
+    NV097_SET_LIGHT_INFINITE_DIRECTION,
+    NV097_SET_LIGHT_INFINITE_HALF_VECTOR,
+    NV097_SET_LIGHT_LOCAL_ATTENUATION,
+    NV097_SET_LIGHT_LOCAL_POSITION,
+    NV097_SET_LIGHT_LOCAL_RANGE,
+    NV097_SET_LIGHT_SPECULAR_COLOR,
+    NV097_SET_LIGHT_SPOT_DIRECTION,
+    NV097_SET_LIGHT_SPOT_FALLOFF,
     NV097_SET_LIGHTING_ENABLE,
+    NV097_SET_MATERIAL_ALPHA,
+    NV097_SET_MATERIAL_EMISSION,
     NV097_SET_POINT_PARAMS,
     NV097_SET_POINT_PARAMS_ENABLE,
     NV097_SET_POINT_SIZE,
     NV097_SET_POINT_SMOOTH_ENABLE,
+    NV097_SET_SCENE_AMBIENT_COLOR,
     NV097_SET_SKIN_MODE,
     NV097_SET_SPECULAR_ENABLE,
+    NV097_SET_SPECULAR_PARAMS,
     NV097_SET_TEXGEN_Q,
     NV097_SET_TEXGEN_R,
     NV097_SET_TEXGEN_S,
     NV097_SET_TEXGEN_T,
     NV097_SET_TEXTURE_MATRIX_ENABLE,
     NV097_SET_TWO_SIDE_LIGHT_EN,
+    PROCESSORS,
     StateArray,
     StructStateArray,
 )
@@ -32,28 +55,51 @@ from nv2apretty.extracted_data import (
 # A set of the base NV097 opcodes to be tracked.
 # This list will be expanded by iterating through the CLASS_TO_COMMAND_PROCESSOR_MAP.
 _BASE_TRACKED_NV097_OPS = {
+    NV097_SET_BACK_LIGHT_AMBIENT_COLOR,
+    NV097_SET_BACK_LIGHT_DIFFUSE_COLOR,
+    NV097_SET_BACK_LIGHT_SPECULAR_COLOR,
+    NV097_SET_BACK_MATERIAL_ALPHA,
+    NV097_SET_BACK_MATERIAL_EMISSION,
+    NV097_SET_BACK_SCENE_AMBIENT_COLOR,
+    NV097_SET_BACK_SPECULAR_PARAMS,
     NV097_SET_COLOR_MATERIAL,
     NV097_SET_FOG_ENABLE,
     NV097_SET_FOG_GEN_MODE,
-    NV097_SET_LIGHT_CONTROL,
-    NV097_SET_LIGHT_ENABLE_MASK,
     NV097_SET_LIGHTING_ENABLE,
+    NV097_SET_LIGHT_AMBIENT_COLOR,
+    NV097_SET_LIGHT_CONTROL,
+    NV097_SET_LIGHT_DIFFUSE_COLOR,
+    NV097_SET_LIGHT_ENABLE_MASK,
+    NV097_SET_LIGHT_INFINITE_DIRECTION,
+    NV097_SET_LIGHT_INFINITE_HALF_VECTOR,
+    NV097_SET_LIGHT_LOCAL_ATTENUATION,
+    NV097_SET_LIGHT_LOCAL_POSITION,
+    NV097_SET_LIGHT_LOCAL_RANGE,
+    NV097_SET_LIGHT_SPECULAR_COLOR,
+    NV097_SET_LIGHT_SPOT_DIRECTION,
+    NV097_SET_LIGHT_SPOT_FALLOFF,
+    NV097_SET_MATERIAL_ALPHA,
+    NV097_SET_MATERIAL_EMISSION,
     NV097_SET_POINT_PARAMS,
     NV097_SET_POINT_PARAMS_ENABLE,
     NV097_SET_POINT_SIZE,
     NV097_SET_POINT_SMOOTH_ENABLE,
+    NV097_SET_SCENE_AMBIENT_COLOR,
     NV097_SET_SKIN_MODE,
     NV097_SET_SPECULAR_ENABLE,
-    NV097_SET_TWO_SIDE_LIGHT_EN,
-    NV097_SET_TEXTURE_MATRIX_ENABLE,
+    NV097_SET_SPECULAR_PARAMS,
+    NV097_SET_TEXGEN_Q,
+    NV097_SET_TEXGEN_R,
     NV097_SET_TEXGEN_S,
     NV097_SET_TEXGEN_T,
-    NV097_SET_TEXGEN_R,
-    NV097_SET_TEXGEN_Q,
+    NV097_SET_TEXTURE_MATRIX_ENABLE,
+    NV097_SET_TWO_SIDE_LIGHT_EN,
 }
 
 _TRACKED_NV097_OPS: set[int] = set()
 _OP_TO_INFO_MAP: dict[int, Any] = {}
+
+_LIGHT_STATUS_RE = re.compile(r".*\{(.+)}")
 
 
 def _populate_tracked_ops():
@@ -133,11 +179,12 @@ class FixedFunctionPipelineState:
             raw_values = []
             base = op_info.base
             for _ in range(op_info.struct_count):
-                element_values = []
+                element_values: list[Any] = []
                 for i in range(op_info.num_elements):
                     val = self._state.get(base + i * op_info.stride, default)
                     if val is None:
-                        return None
+                        element_values = [None] * op_info.num_elements
+                        break
                     element_values.append(val)
                 raw_values.append(element_values)
                 base += op_info.struct_stride
@@ -159,7 +206,7 @@ class FixedFunctionPipelineState:
                 return default_string_value
 
             op = opcode
-            processor = _PROCESSORS.get((0x97, op))
+            processor = PROCESSORS.get((0x97, op))
 
             return processor(0, 0x97, raw_value) if processor else f"0x{raw_value:X}"
 
@@ -170,7 +217,7 @@ class FixedFunctionPipelineState:
             processed_values: list[str] = []
             for i, param in enumerate(raw_value):
                 op = op_info.base + i * op_info.stride
-                processor = _PROCESSORS.get((0x97, op))
+                processor = PROCESSORS.get((0x97, op))
                 processed_values.append(processor(0, 0x97, param) if processor else f"0x{param:X}")
             return processed_values
 
@@ -184,8 +231,11 @@ class FixedFunctionPipelineState:
                 processed_struct: list[str] = []
                 for i, param in enumerate(struct_element):
                     op = base + i * op_info.stride
-                    processor = _PROCESSORS.get((0x97, op))
-                    processed_struct.append(processor(0, 0x97, param) if processor else f"0x{param:X}")
+                    if param is None:
+                        processed_struct.append(default_string_value)
+                    else:
+                        processor = PROCESSORS.get((0x97, op))
+                        processed_struct.append(processor(0, 0x97, param) if processor else f"0x{param:X}")
                 processed_struct_values.append(processed_struct)
                 base += op_info.struct_stride
             return processed_struct_values
@@ -193,18 +243,71 @@ class FixedFunctionPipelineState:
         msg = f"Unsupported op_type '{op_type}'"
         raise ValueError(msg)
 
+    def _expand_light_states(self, light_status_string: str, *, two_sided_lighting: bool = False) -> list[str]:
+        light_enabled_state_pairs = light_status_string.split(", ")
+
+        ret: list[str] = []
+        for index, status_string in enumerate(light_enabled_state_pairs):
+            elements = status_string.split(":")
+            if len(elements) != 2 or elements[1] == "OFF":
+                continue
+
+            light_name, light_type = elements
+            ret.append(f"\t{light_name}: {light_type}")
+
+            ret.append(f"\t\tAmbient: {self._process(NV097_SET_LIGHT_AMBIENT_COLOR)[index]}")
+            ret.append(f"\t\tDiffuse: {self._process(NV097_SET_LIGHT_DIFFUSE_COLOR)[index]}")
+            ret.append(f"\t\tSpecular: {self._process(NV097_SET_LIGHT_SPECULAR_COLOR)[index]}")
+
+            if two_sided_lighting:
+                ret.append(f"\t\tBack ambient: {self._process(NV097_SET_BACK_LIGHT_AMBIENT_COLOR)[index]}")
+                ret.append(f"\t\tBack diffuse: {self._process(NV097_SET_BACK_LIGHT_DIFFUSE_COLOR)[index]}")
+                ret.append(f"\t\tBack specular: {self._process(NV097_SET_BACK_LIGHT_SPECULAR_COLOR)[index]}")
+
+            if light_type == "INFINITE":
+                ret.append(f"\t\tDirection: {self._process(NV097_SET_LIGHT_INFINITE_DIRECTION)[index]}")
+                ret.append(f"\t\tHalf-vector: {self._process(NV097_SET_LIGHT_INFINITE_HALF_VECTOR)[index]}")
+            else:
+                ret.append(f"\t\tPosition: {self._process(NV097_SET_LIGHT_LOCAL_POSITION)[index]}")
+                ret.append(f"\t\tRange: {self._process(NV097_SET_LIGHT_LOCAL_RANGE)[index]}")
+                ret.append(f"\t\tAttenuation: {self._process(NV097_SET_LIGHT_LOCAL_ATTENUATION)[index]}")
+
+                if light_type == "SPOT":
+                    ret.append(f"\t\tSpot direction: {self._process(NV097_SET_LIGHT_SPOT_DIRECTION)[index]}")
+                    ret.append(f"\t\tSpot falloff: {self._process(NV097_SET_LIGHT_SPOT_FALLOFF)[index]}")
+
+        return ret
+
     def __str__(self):
         ret = []
 
         lighting_enabled = self.get_raw_value(NV097_SET_LIGHTING_ENABLE, 0) != 0
+        two_sided_lighting = self.get_raw_value(NV097_SET_TWO_SIDE_LIGHT_EN, 0)
         ret.append(f"  Lighting: {lighting_enabled}")
         if lighting_enabled:
-            ret.append(f"\tTwo sided: {bool(self.get_raw_value(NV097_SET_TWO_SIDE_LIGHT_EN, 0))}")
             ret.append(f"\tColor material: {self._process(NV097_SET_COLOR_MATERIAL)}")
             ret.append(f"\tLight control: {self._process(NV097_SET_LIGHT_CONTROL)}")
-            ret.append(f"\tLight enable: {self._process(NV097_SET_LIGHT_ENABLE_MASK)}")
+            ret.append(f"\tScene ambient: {self._process(NV097_SET_SCENE_AMBIENT_COLOR)}")
+            ret.append(f"\tMaterial emission: {self._process(NV097_SET_MATERIAL_EMISSION)}")
+            ret.append(f"\tMaterial alpha: {self._process(NV097_SET_MATERIAL_ALPHA)}")
+            ret.append(f"\tSpecular params: {self._process(NV097_SET_SPECULAR_PARAMS)}")
 
-        ret.append(f"Specular enable: {bool(self.get_raw_value(NV097_SET_SPECULAR_ENABLE, 0))}")
+            ret.append(f"\tTwo sided: {bool(two_sided_lighting)}")
+            if two_sided_lighting:
+                ret.append(f"\t\tBack scene ambient: {self._process(NV097_SET_BACK_SCENE_AMBIENT_COLOR)}")
+                ret.append(f"\t\tBack material emission: {self._process(NV097_SET_BACK_MATERIAL_EMISSION)}")
+                ret.append(f"\t\tBack material alpha: {self._process(NV097_SET_BACK_MATERIAL_ALPHA)}")
+
+            match = _LIGHT_STATUS_RE.match(self._process(NV097_SET_LIGHT_ENABLE_MASK))
+            if match:
+                ret.extend(self._expand_light_states(match.group(1), two_sided_lighting=two_sided_lighting))
+
+        specular_enable = self.get_raw_value(NV097_SET_SPECULAR_ENABLE, 0)
+        ret.append(f"Specular enable: {bool(specular_enable)}")
+        if specular_enable:
+            ret.append(f"\tSpecular params: {self._process(NV097_SET_SPECULAR_PARAMS)}")
+            if two_sided_lighting:
+                ret.append(f"\tBack specular params: {self._process(NV097_SET_BACK_SPECULAR_PARAMS)}")
 
         fog_enabled = self.get_raw_value(NV097_SET_FOG_ENABLE, 0) != 0
         ret.append(f"Fog enable: {fog_enabled}")
