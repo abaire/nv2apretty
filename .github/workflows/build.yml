@@ -1,4 +1,4 @@
-name: Build perf tester
+name: Build
 
 on:
   push:
