@@ -179,7 +179,7 @@ class FixedFunctionPipelineState:
             raw_values = []
             base = op_info.base
             for _ in range(op_info.struct_count):
-                element_values = []
+                element_values: list[Any] = []
                 for i in range(op_info.num_elements):
                     val = self._state.get(base + i * op_info.stride, default)
                     if val is None:
