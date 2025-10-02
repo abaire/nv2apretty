@@ -2216,6 +2216,19 @@ def ParseNv097SetAntiAliasingControl(_nv_class, _nv_op, nv_param: int) -> str:
     return f"0x{nv_param:X}?"
 
 
+def ParseNv097SetBackPolygonMode(_nv_class, _nv_op, nv_param: int) -> str:
+    """Parses the components of a NV097_SET_BACK_POLYGON_MODE command."""
+    _VALUES = {
+        6912: "V_POINT",
+        6913: "V_LINE",
+        6914: "V_FILL",
+    }
+    ret = _VALUES.get(nv_param)
+    if ret:
+        return ret
+    return f"0x{nv_param:X}?"
+
+
 def ParseNv097SetBeginEnd(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_BEGIN_END command."""
     _VALUES = {
@@ -2239,138 +2252,82 @@ def ParseNv097SetBeginEnd(_nv_class, _nv_op, nv_param: int) -> str:
 
 def ParseNv097SetBlendEquation(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_BLEND_EQUATION command."""
-    results: list[str] = []
-    field_val = nv_param & 0x800A
-    results.append(f"NV097_SET_BLEND_EQUATION_:0x{field_val:X}")
-    field_val = nv_param & 0x800B
-    field_map = {
-        0xF005: "NV097_SET_BLEND_EQUATION_V_FUNC_REVERSE_SUBTRACT_SIGNED",
+    _VALUES = {
+        32774: "V_FUNC_ADD",
+        32775: "V_MIN",
+        32776: "V_MAX",
+        32778: "V_FUNC_SUBTRACT",
+        32779: "V_FUNC_REVERSE_SUBTRACT",
+        61445: "V_FUNC_REVERSE_SUBTRACT_SIGNED",
+        61446: "V_FUNC_ADD_SIGNED",
     }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_BLEND_EQUATION_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_BLEND_EQUATION_:0x{field_val:X}")
-    field_val = nv_param & 0x8006
-    field_map = {
-        0xF006: "NV097_SET_BLEND_EQUATION_V_FUNC_ADD_SIGNED",
-    }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_BLEND_EQUATION_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_BLEND_EQUATION_:0x{field_val:X}")
-    field_val = nv_param & 0x8007
-    results.append(f"NV097_SET_BLEND_EQUATION_:0x{field_val:X}")
-    field_val = nv_param & 0x8008
-    results.append(f"NV097_SET_BLEND_EQUATION_:0x{field_val:X}")
-    return f'{{{', '.join(results)}}}'
+    ret = _VALUES.get(nv_param)
+    if ret:
+        return ret
+    return f"0x{nv_param:X}?"
 
 
 def ParseNv097SetBlendFuncDfactor(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_BLEND_FUNC_DFACTOR command."""
-    results: list[str] = []
-    field_val = nv_param & 0x0
-    results.append(f"NV097_SET_BLEND_FUNC_DFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x1
-    field_map = {
-        0x301: "NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_COLOR",
-        0x303: "NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_SRC_ALPHA",
-        0x305: "NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_DST_ALPHA",
-        0x307: "NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_DST_COLOR",
-        0x8002: "NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_CONSTANT_COLOR",
-        0x8004: "NV097_SET_BLEND_FUNC_DFACTOR_V_ONE_MINUS_CONSTANT_ALPHA",
+    _VALUES = {
+        0: "V_ZERO",
+        1: "V_ONE",
+        768: "V_SRC_COLOR",
+        769: "V_ONE_MINUS_SRC_COLOR",
+        770: "V_SRC_ALPHA",
+        771: "V_ONE_MINUS_SRC_ALPHA",
+        772: "V_DST_ALPHA",
+        773: "V_ONE_MINUS_DST_ALPHA",
+        774: "V_DST_COLOR",
+        775: "V_ONE_MINUS_DST_COLOR",
+        776: "V_SRC_ALPHA_SATURATE",
+        32769: "V_CONSTANT_COLOR",
+        32770: "V_ONE_MINUS_CONSTANT_COLOR",
+        32771: "V_CONSTANT_ALPHA",
+        32772: "V_ONE_MINUS_CONSTANT_ALPHA",
     }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_BLEND_FUNC_DFACTOR_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_BLEND_FUNC_DFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x300
-    results.append(f"NV097_SET_BLEND_FUNC_DFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x302
-    field_map = {
-        0x308: "NV097_SET_BLEND_FUNC_DFACTOR_V_SRC_ALPHA_SATURATE",
-    }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_BLEND_FUNC_DFACTOR_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_BLEND_FUNC_DFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x304
-    results.append(f"NV097_SET_BLEND_FUNC_DFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x306
-    results.append(f"NV097_SET_BLEND_FUNC_DFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x8001
-    results.append(f"NV097_SET_BLEND_FUNC_DFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x8003
-    results.append(f"NV097_SET_BLEND_FUNC_DFACTOR_:0x{field_val:X}")
-    return f'{{{', '.join(results)}}}'
+    ret = _VALUES.get(nv_param)
+    if ret:
+        return ret
+    return f"0x{nv_param:X}?"
 
 
 def ParseNv097SetBlendFuncSfactor(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_BLEND_FUNC_SFACTOR command."""
-    results: list[str] = []
-    field_val = nv_param & 0x0
-    results.append(f"NV097_SET_BLEND_FUNC_SFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x1
-    field_map = {
-        0x301: "NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_SRC_COLOR",
-        0x303: "NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_SRC_ALPHA",
-        0x305: "NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_DST_ALPHA",
-        0x307: "NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_DST_COLOR",
-        0x8002: "NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_CONSTANT_COLOR",
-        0x8004: "NV097_SET_BLEND_FUNC_SFACTOR_V_ONE_MINUS_CONSTANT_ALPHA",
+    _VALUES = {
+        0: "V_ZERO",
+        1: "V_ONE",
+        768: "V_SRC_COLOR",
+        769: "V_ONE_MINUS_SRC_COLOR",
+        770: "V_SRC_ALPHA",
+        771: "V_ONE_MINUS_SRC_ALPHA",
+        772: "V_DST_ALPHA",
+        773: "V_ONE_MINUS_DST_ALPHA",
+        774: "V_DST_COLOR",
+        775: "V_ONE_MINUS_DST_COLOR",
+        776: "V_SRC_ALPHA_SATURATE",
+        32769: "V_CONSTANT_COLOR",
+        32770: "V_ONE_MINUS_CONSTANT_COLOR",
+        32771: "V_CONSTANT_ALPHA",
+        32772: "V_ONE_MINUS_CONSTANT_ALPHA",
     }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_BLEND_FUNC_SFACTOR_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_BLEND_FUNC_SFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x300
-    results.append(f"NV097_SET_BLEND_FUNC_SFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x302
-    field_map = {
-        0x308: "NV097_SET_BLEND_FUNC_SFACTOR_V_SRC_ALPHA_SATURATE",
-    }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_BLEND_FUNC_SFACTOR_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_BLEND_FUNC_SFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x304
-    results.append(f"NV097_SET_BLEND_FUNC_SFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x306
-    results.append(f"NV097_SET_BLEND_FUNC_SFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x8001
-    results.append(f"NV097_SET_BLEND_FUNC_SFACTOR_:0x{field_val:X}")
-    field_val = nv_param & 0x8003
-    results.append(f"NV097_SET_BLEND_FUNC_SFACTOR_:0x{field_val:X}")
-    return f'{{{', '.join(results)}}}'
+    ret = _VALUES.get(nv_param)
+    if ret:
+        return ret
+    return f"0x{nv_param:X}?"
 
 
 def ParseNv097SetCullFace(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_CULL_FACE command."""
-    results: list[str] = []
-    field_val = nv_param & 0x404
-    field_map = {
-        0x408: "NV097_SET_CULL_FACE_V_FRONT_AND_BACK",
+    _VALUES = {
+        1028: "V_FRONT",
+        1029: "V_BACK",
+        1032: "V_FRONT_AND_BACK",
     }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_CULL_FACE_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_CULL_FACE_:0x{field_val:X}")
-    field_val = nv_param & 0x405
-    results.append(f"NV097_SET_CULL_FACE_:0x{field_val:X}")
-    return f'{{{', '.join(results)}}}'
+    ret = _VALUES.get(nv_param)
+    if ret:
+        return ret
+    return f"0x{nv_param:X}?"
 
 
 def ParseNv097SetDepthFunc(_nv_class, _nv_op, nv_param: int) -> str:
@@ -2897,7 +2854,7 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         NV097_SET_POLYGON_OFFSET_SCALE_FACTOR: _process_passthrough,
         NV097_SET_POLYGON_OFFSET_BIAS: _process_passthrough,
         NV097_SET_FRONT_POLYGON_MODE: ParseNv097SetFrontPolygonMode,
-        NV097_SET_BACK_POLYGON_MODE: _process_passthrough,
+        NV097_SET_BACK_POLYGON_MODE: ParseNv097SetBackPolygonMode,
         NV097_SET_CLIP_MIN: _process_float_param,
         NV097_SET_CLIP_MAX: _process_float_param,
         NV097_SET_CULL_FACE: ParseNv097SetCullFace,

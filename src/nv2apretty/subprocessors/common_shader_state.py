@@ -3,12 +3,36 @@ from __future__ import annotations
 # ruff: noqa: PLR2004 Magic value used in comparison
 import re
 from dataclasses import dataclass
+from typing import Callable
 
 from nv2apretty.extracted_data import (
+    NV097_DRAW_ARRAYS,
+    NV097_SET_ALPHA_FUNC,
+    NV097_SET_ALPHA_REF,
+    NV097_SET_ALPHA_TEST_ENABLE,
     NV097_SET_ANTI_ALIASING_CONTROL,
+    NV097_SET_BACK_POLYGON_MODE,
+    NV097_SET_BLEND_COLOR,
+    NV097_SET_BLEND_ENABLE,
+    NV097_SET_BLEND_EQUATION,
+    NV097_SET_BLEND_FUNC_DFACTOR,
+    NV097_SET_BLEND_FUNC_SFACTOR,
+    NV097_SET_CULL_FACE,
+    NV097_SET_CULL_FACE_ENABLE,
+    NV097_SET_DEPTH_FUNC,
+    NV097_SET_DEPTH_MASK,
+    NV097_SET_DEPTH_TEST_ENABLE,
     NV097_SET_EYE_VECTOR,
+    NV097_SET_FRONT_POLYGON_MODE,
     NV097_SET_SHADER_OTHER_STAGE_INPUT,
     NV097_SET_SHADER_STAGE_PROGRAM,
+    NV097_SET_STENCIL_FUNC_MASK,
+    NV097_SET_STENCIL_FUNC_REF,
+    NV097_SET_STENCIL_MASK,
+    NV097_SET_STENCIL_OP_FAIL,
+    NV097_SET_STENCIL_OP_ZFAIL,
+    NV097_SET_STENCIL_OP_ZPASS,
+    NV097_SET_STENCIL_TEST_ENABLE,
     NV097_SET_TEXTURE_ADDRESS,
     NV097_SET_TEXTURE_BORDER_COLOR,
     NV097_SET_TEXTURE_CONTROL0,
@@ -21,6 +45,8 @@ from nv2apretty.extracted_data import (
     NV097_SET_TEXTURE_SET_BUMP_ENV_MAT,
     NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET,
     NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE,
+    NV097_SET_VERTEX_DATA_ARRAY_FORMAT,
+    NV097_SET_VERTEX_DATA_ARRAY_OFFSET,
 )
 from nv2apretty.subprocessors.pipeline_state import PipelineState
 
@@ -34,10 +60,33 @@ class CommonShaderState(PipelineState):
     def __post_init__(self):
         self._initialize(
             {
+                NV097_SET_ALPHA_FUNC,
+                NV097_SET_ALPHA_REF,
+                NV097_SET_ALPHA_TEST_ENABLE,
+                NV097_SET_BLEND_COLOR,
+                NV097_SET_BLEND_ENABLE,
+                NV097_SET_BLEND_EQUATION,
+                NV097_SET_BLEND_FUNC_DFACTOR,
+                NV097_SET_BLEND_FUNC_SFACTOR,
+                NV097_DRAW_ARRAYS,
                 NV097_SET_ANTI_ALIASING_CONTROL,
+                NV097_SET_BACK_POLYGON_MODE,
+                NV097_SET_CULL_FACE,
+                NV097_SET_CULL_FACE_ENABLE,
+                NV097_SET_DEPTH_FUNC,
+                NV097_SET_DEPTH_MASK,
+                NV097_SET_DEPTH_TEST_ENABLE,
                 NV097_SET_EYE_VECTOR,
+                NV097_SET_FRONT_POLYGON_MODE,
                 NV097_SET_SHADER_OTHER_STAGE_INPUT,
                 NV097_SET_SHADER_STAGE_PROGRAM,
+                NV097_SET_STENCIL_FUNC_MASK,
+                NV097_SET_STENCIL_FUNC_REF,
+                NV097_SET_STENCIL_MASK,
+                NV097_SET_STENCIL_OP_FAIL,
+                NV097_SET_STENCIL_OP_ZFAIL,
+                NV097_SET_STENCIL_OP_ZPASS,
+                NV097_SET_STENCIL_TEST_ENABLE,
                 NV097_SET_TEXTURE_ADDRESS,
                 NV097_SET_TEXTURE_BORDER_COLOR,
                 NV097_SET_TEXTURE_CONTROL0,
@@ -50,6 +99,8 @@ class CommonShaderState(PipelineState):
                 NV097_SET_TEXTURE_SET_BUMP_ENV_MAT,
                 NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET,
                 NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE,
+                NV097_SET_VERTEX_DATA_ARRAY_FORMAT,
+                NV097_SET_VERTEX_DATA_ARRAY_OFFSET,
             }
         )
 
@@ -116,8 +167,92 @@ class CommonShaderState(PipelineState):
 
         return ret
 
+    def _expand_vertex_array_info(self) -> list[str]:
+        ret = ["\tVertex data array format:"]
+        format_strings = self._process(NV097_SET_VERTEX_DATA_ARRAY_FORMAT, default_raw_value=0)
+        offset_strings = self._process(NV097_SET_VERTEX_DATA_ARRAY_OFFSET, default_raw_value=0)
+        for index, vertex_format in enumerate(format_strings):
+            if not isinstance(vertex_format, str):
+                msg = f"Unexpected type for NV097_SET_VERTEX_DATA_ARRAY_FORMAT data: `{vertex_format}`"
+                raise TypeError(msg)
+            if vertex_format.endswith("{Disabled}"):
+                continue
+
+            ret.append(f"\t\tv{index}: {vertex_format} @ {offset_strings[index]}")
+        return ret
+
     def __str__(self):
         ret = []
+
+        def render_unusual_only(
+            state_guard_op: int, render_func: Callable[[str, int], None], uninteresting_state: int = 0
+        ):
+            guard_state = self._get_raw_value(state_guard_op, -1)
+            if guard_state is None:
+                raise ValueError
+            if guard_state == uninteresting_state:
+                return
+
+            suffix = " <ENABLE STATE UNKNOWN>" if guard_state < 0 else ""
+            render_func(suffix, guard_state)
+
+        render_unusual_only(
+            NV097_SET_CULL_FACE_ENABLE,
+            lambda suffix, _: ret.append(f"\tCull face: {self._process(NV097_SET_CULL_FACE)}{suffix}"),
+        )
+
+        render_unusual_only(
+            NV097_SET_DEPTH_TEST_ENABLE,
+            lambda suffix, _: ret.append(f"\tDepth test: {self._process(NV097_SET_DEPTH_FUNC)}{suffix}"),
+        )
+
+        render_unusual_only(
+            NV097_SET_DEPTH_MASK,
+            lambda _, state: ret.append(f"\tDepth write: {'<MATBE OFF>' if state < 0 else 'OFF'}"),
+            uninteresting_state=1,
+        )
+
+        def render_stencil_state(suffix: str, _: int):
+            ret.append(f"\tStencil testing:{suffix}")
+            ret.append(f"\t\tTest mask: {self._process(NV097_SET_STENCIL_FUNC_MASK)}")
+            ret.append(f"\t\tRef value: {self._process(NV097_SET_STENCIL_FUNC_REF)}")
+            ret.append(f"\t\tFail op: {self._process(NV097_SET_STENCIL_OP_FAIL)}")
+            ret.append(f"\t\tDepth fail op: {self._process(NV097_SET_STENCIL_OP_ZFAIL)}")
+            ret.append(f"\t\tPass op: {self._process(NV097_SET_STENCIL_OP_ZPASS)}")
+
+        render_unusual_only(NV097_SET_STENCIL_TEST_ENABLE, render_stencil_state)
+
+        render_unusual_only(
+            NV097_SET_STENCIL_MASK,
+            lambda _, state: ret.append(f"\tStencil write: {'<MATBE OFF>' if state < 0 else 'OFF'}"),
+            uninteresting_state=1,
+        )
+
+        def render_alpha_test_state(suffix: str, _: int):
+            ret.append(f"\tAlpha testing:{suffix}")
+            ret.append(f"\t\tTest func: {self._process(NV097_SET_ALPHA_FUNC)}")
+            ret.append(f"\t\tRef value: {self._process(NV097_SET_ALPHA_REF)}")
+
+        render_unusual_only(NV097_SET_ALPHA_TEST_ENABLE, render_alpha_test_state)
+
+        def render_alpha_blend_state(suffix: str, _: int):
+            ret.append(f"\tAlpha blending:{suffix}")
+            ret.append(f"\t\tEquation: {self._process(NV097_SET_BLEND_EQUATION)}")
+            ret.append(f"\t\tSource factor: {self._process(NV097_SET_BLEND_FUNC_SFACTOR)}")
+            ret.append(f"\t\tDestination factor: {self._process(NV097_SET_BLEND_FUNC_DFACTOR)}")
+            ret.append(f"\t\tColor constant: {self._process(NV097_SET_BLEND_COLOR)}")
+
+        render_unusual_only(NV097_SET_ALPHA_TEST_ENABLE, render_alpha_blend_state)
+
+        poly_front_mode = self._process(NV097_SET_FRONT_POLYGON_MODE)
+        if poly_front_mode != "V_FILL":
+            ret.append(f"\tPolygon front mode: {poly_front_mode}")
+        poly_back_mode = self._process(NV097_SET_BACK_POLYGON_MODE)
+        if poly_back_mode != "V_FILL":
+            ret.append(f"\tPolygon back mode: {poly_back_mode}")
+
+        if self._get_count(NV097_DRAW_ARRAYS):
+            ret.extend(self._expand_vertex_array_info())
 
         match = _BITVECTOR_EXPANSION_RE.match(self._process(NV097_SET_SHADER_STAGE_PROGRAM))
         if match:
