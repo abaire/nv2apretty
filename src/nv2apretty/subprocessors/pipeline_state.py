@@ -57,7 +57,12 @@ def _expand_command_map(nv_commands: set[int]) -> tuple[dict[int, int | StateArr
 class PipelineState:
     """Baseclass for capture of nv2a GPU state."""
 
+    # Maps NV097 operations to a raw invocation count
+    _counter_state: dict[int, int] = field(default_factory=dict)
+
+    # Maps NV097 operations to the most recently set parameter value
     _state: dict[int, int] = field(default_factory=dict)
+
     _command_to_info: dict[int, int | StateArray | StructStateArray] = field(default_factory=dict)
     _command_filter: set[int] = field(default_factory=set)
 
@@ -65,9 +70,22 @@ class PipelineState:
         self.command_to_info, self.command_filter = _expand_command_map(tracked_ops)
 
     def update(self, nv_op: int, nv_param: int):
+        self._counter_state[nv_op] = self._counter_state.get(nv_op, 0) + 1
         if nv_op not in self.command_filter:
             return
         self._state[nv_op] = nv_param
+
+    def draw_end(self):
+        """Should be invoked whenever a NV097_SET_BEGIN_END with an 'end' parameter is processed."""
+        self._counter_state.clear()
+
+    def get_total_command_count(self) -> int:
+        """Returns the total number of unfiltered commands processed since the last draw ended."""
+        return sum(self._counter_state.values())
+
+    def _get_count(self, opcode: int) -> int:
+        """Looks up the number of times that the given opcode was called since the current draw started."""
+        return self._counter_state.get(opcode, 0)
 
     def _get_raw_value(self, opcode: int, default: Any | None = None) -> Any | None:
         """Looks up a value or array of values for the given opcode, optionally expanding them into a string."""

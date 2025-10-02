@@ -321,12 +321,15 @@ def _process_file(
                         f"frame_draw {current_frame_summary.frame_draw_count} surface_dump {current_frame_summary.surface_dump_count}"
                     )
                     current_frame_summary.surface_dump_count += 1
-                current_frame_summary.frame_draw_count += 1
+                current_frame_summary.draw_begin()
             elif block_marker == Tag.END_TAG:
                 if summarize:
                     draw_summary(
                         f"== Draw {current_frame_summary.frame_draw_count - 1} summary: ============",
                         file=summary_output_stream,
+                    )
+                    draw_summary(
+                        f"\tProcessed {current_frame_summary.common_shader_state.get_total_command_count()} PGRAPH commands"
                     )
                     draw_summary(f"\tPipeline: {current_frame_summary.pipeline}", file=summary_output_stream)
                     if current_frame_summary.pipeline == FrameSummary.PIPELINE_UNKNOWN:
@@ -345,17 +348,7 @@ def _process_file(
                     draw_summary("\n", file=summary_output_stream)
                 if add_blank_after_end:
                     raw("\n")
-                current_frame_summary.draws_by_pipeline[current_frame_summary.pipeline] += 1
-                current_frame_summary.draws_by_combiner[current_frame_summary.combiner_state.explain()] += 1
-                current_frame_summary.draw_summary_messages.clear()
-
-                if current_frame_summary.pipeline == FrameSummary.PIPELINE_PROGRAMMABLE:
-                    if current_frame_summary.active_shader:
-                        current_frame_summary.draws_by_programmable_shader[current_frame_summary.active_shader] += 1
-                else:
-                    current_frame_summary.unique_fixed_function_shaders.add(
-                        str(current_frame_summary.fixed_function_shader_state)
-                    )
+                current_frame_summary.draw_end()
 
             elif block_marker == Tag.FLIP_STALL_TAG:
                 if summarize:

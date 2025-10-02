@@ -42,6 +42,25 @@ class FrameSummary:
     def is_fixed_function(self) -> bool:
         return self.pipeline in {FrameSummary.PIPELINE_FIXED, FrameSummary.PIPELINE_ASSUMED_FIXED}
 
+    def draw_begin(self):
+        """Should be invoked whenever a NV097_SET_BEGIN_END with a non-end parameter is processed"""
+        self.frame_draw_count += 1
+
+    def draw_end(self):
+        """Should be invoked whenever a NV097_SET_BEGIN_END with an 'end' parameter is processed"""
+        self.draws_by_pipeline[self.pipeline] += 1
+        self.draws_by_combiner[self.combiner_state.explain()] += 1
+        self.draw_summary_messages.clear()
+
+        if self.pipeline == FrameSummary.PIPELINE_PROGRAMMABLE:
+            if self.active_shader:
+                self.draws_by_programmable_shader[self.active_shader] += 1
+        else:
+            self.unique_fixed_function_shaders.add(str(self.fixed_function_shader_state))
+
+        self.common_shader_state.draw_end()
+        self.fixed_function_shader_state.draw_end()
+
     def reset(self):
         self.frame_draw_count = 0
         self.surface_dump_count = 0
