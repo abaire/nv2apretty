@@ -4,6 +4,7 @@ import collections
 from dataclasses import dataclass, field
 
 from nv2apretty.subprocessors.color_combiner import CombinerState
+from nv2apretty.subprocessors.common_shader_state import CommonShaderState
 from nv2apretty.subprocessors.fixed_function_shader import FixedFunctionPipelineState
 
 
@@ -20,6 +21,7 @@ class FrameSummary:
     frame_draw_count: int = 0
     combiner_state: CombinerState = field(default_factory=lambda: CombinerState())
 
+    common_shader_state: CommonShaderState = field(default_factory=lambda: CommonShaderState())
     fixed_function_shader_state: FixedFunctionPipelineState = field(
         default_factory=lambda: FixedFunctionPipelineState()
     )
@@ -50,4 +52,5 @@ class FrameSummary:
 
     def update(self, nv_op: int, nv_param: int):
         self.combiner_state.update(nv_op, nv_param)
+        self.common_shader_state.update(nv_op, nv_param)
         self.fixed_function_shader_state.update(nv_op, nv_param)

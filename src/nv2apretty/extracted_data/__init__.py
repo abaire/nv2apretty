@@ -2788,7 +2788,7 @@ def ParseNv09fSetOperation(_nv_class, _nv_op, nv_param: int) -> str:
     return f"0x{nv_param:X}?"
 
 
-CLASS_TO_COMMAND_PROCESSOR_MAP = {
+CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArray, ProcessorFunc]] = {
     0x12: {
         NV012_SET_OBJECT: _process_passthrough,
         NV012_SET_BETA: _process_passthrough,
@@ -3069,6 +3069,8 @@ CLASS_TO_COMMAND_PROCESSOR_MAP = {
 }
 
 # Mapping of graphics class to commands and processors.
+PROCESSORS: dict[tuple[int, int], ProcessorFunc]
+_NAME_MAP: dict[tuple[int, int], str]
 PROCESSORS, _NAME_MAP = _expand_processors(CLASS_TO_COMMAND_PROCESSOR_MAP)
 
 

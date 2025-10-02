@@ -36,7 +36,6 @@ from xml.sax import saxutils
 from nv2a_vsh import disassemble
 
 from nv2apretty import deep_processing, pvideo
-from nv2apretty.deep_processing import process_shader_stage_program
 from nv2apretty.subprocessors.frame_summary import FrameSummary
 
 if TYPE_CHECKING:
@@ -134,12 +133,6 @@ def _process_pgraph_command(channel, nv_class, nv_op, nv_param) -> tuple[Tag | N
         if (nv_param & 0x02) == 0x00:
             return Tag.PIPELINE, FrameSummary.PIPELINE_FIXED
         return Tag.PIPELINE, FrameSummary.PIPELINE_PROGRAMMABLE
-
-    if nv_op == NV097_SET_SHADER_STAGE_PROGRAM:
-        return (
-            None,
-            f"Texture stage setup: {process_shader_stage_program(nv_class, nv_op, nv_param)}",
-        )
 
     if nv_op == NV097_SET_NORMALIZATION_ENABLE:
         return (None, f"Normalization: {nv_param}")
@@ -335,11 +328,18 @@ def _process_file(
                         f"== Draw {current_frame_summary.frame_draw_count - 1} summary: ============",
                         file=summary_output_stream,
                     )
-                    draw_summary(f"  Pipeline: {current_frame_summary.pipeline}", file=summary_output_stream)
+                    draw_summary(f"\tPipeline: {current_frame_summary.pipeline}", file=summary_output_stream)
                     if current_frame_summary.pipeline == FrameSummary.PIPELINE_UNKNOWN:
                         current_frame_summary.pipeline = FrameSummary.PIPELINE_ASSUMED_FIXED
+
+                    draw_summary(str(current_frame_summary.common_shader_state), file=summary_output_stream)
+
                     if current_frame_summary.is_fixed_function:
                         draw_summary(str(current_frame_summary.fixed_function_shader_state), file=summary_output_stream)
+
+                    if explain_combiners and suppress_raw_commands:
+                        draw_summary(f"\t{'\n\t\t'.join(current_frame_summary.combiner_state.explain().splitlines())}")
+
                     for summary_message in sorted(current_frame_summary.draw_summary_messages):
                         draw_summary(f"  {summary_message}", file=summary_output_stream)
                     draw_summary("\n", file=summary_output_stream)
@@ -349,7 +349,7 @@ def _process_file(
                 current_frame_summary.draws_by_combiner[current_frame_summary.combiner_state.explain()] += 1
                 current_frame_summary.draw_summary_messages.clear()
 
-                if current_frame_summary.pipeline == "Programmable":
+                if current_frame_summary.pipeline == FrameSummary.PIPELINE_PROGRAMMABLE:
                     if current_frame_summary.active_shader:
                         current_frame_summary.draws_by_programmable_shader[current_frame_summary.active_shader] += 1
                 else:
@@ -508,8 +508,8 @@ def _main(args):
         decompile_shaders=get_arg(args.decompile_shaders),
         explain_combiners=get_arg(args.explain_combiners),
         tracer_mode=args.tracer_mode,
-        summarize=get_arg(args.summarize) or get_arg(args.summarize_frames_only),
-        suppress_raw_commands=args.summarize_frames_only,
+        summarize=any({get_arg(args.summarize), get_arg(args.summarize_only), get_arg(args.summarize_frames_only)}),
+        suppress_raw_commands=args.summarize_frames_only or args.summarize_only,
         suppress_draw_summaries=args.summarize_frames_only,
         summary_output_stream=summary_output_stream,
     )
@@ -563,6 +563,11 @@ def entrypoint():
             "--summarize",
             action=argparse.BooleanOptionalAction,
             help="Generates per-draw/per-frame summarization information.",
+        )
+        parser.add_argument(
+            "--summarize-only",
+            action=argparse.BooleanOptionalAction,
+            help="Generates per-draw/per-frame summarization information and suppresses other output.",
         )
         parser.add_argument(
             "--summarize-frames-only",
