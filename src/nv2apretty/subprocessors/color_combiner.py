@@ -367,8 +367,10 @@ class CombinerState:
                 mux = f" `{mux_type}` " if output.MUX else " + "
 
                 if any(result != "Discard" or keep_discarded for result in (ab_dst, cd_dst, sum_dst)):
-                    ret.append(f"  C0 = {factor_0}")
-                    ret.append(f"  C1 = {factor_1}")
+                    if any("C0" in input_slot for input_slot in (a, b, c, d)):
+                        ret.append(f"  C0 = {factor_0}")
+                    if any("C1" in input_slot for input_slot in (a, b, c, d)):
+                        ret.append(f"  C1 = {factor_1}")
                 if ab_dst != "Discard" or keep_discarded:
                     ret.append(f"  {ab_dst}.{swizzle} = {render_op(a, b, output.AB_DOT, output.OP)}")
                 if cd_dst != "Discard" or keep_discarded:
@@ -456,9 +458,14 @@ class CombinerState:
         if output_1.SPECULAR_CLAMP:
             flags.append("specular_clamp")
 
+        all_components = {a_component, b_component, c_component, d_component, e_component, f_component, g_component}
+        if any("C0" in input_slot for input_slot in all_components):
+            ret.append(f"C0 = {ColorFactorBitField(self.final_combiner_constant0)}")
+        if any("C1" in input_slot for input_slot in all_components):
+            ret.append(f"C1 = {ColorFactorBitField(self.final_combiner_constant1)}")
+
         ret.append(f"EFProd = {e_component} * {f_component}")
-        ret.append(f"C0 = {ColorFactorBitField(self.final_combiner_constant0)}")
-        ret.append(f"C1 = {ColorFactorBitField(self.final_combiner_constant1)}")
+
         if flags:
             flags_str = ", ".join(flags)
             ret.append(f"Flags = {flags_str}")
