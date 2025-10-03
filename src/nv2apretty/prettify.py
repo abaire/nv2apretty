@@ -354,6 +354,9 @@ def _process_file(
                 if summarize:
                     frame_summary("== Frame summary: ================", file=summary_output_stream)
                     frame_summary(f"  {current_frame_summary.frame_draw_count} draws", file=summary_output_stream)
+                    frame_summary(
+                        f"  {current_frame_summary.frame_op_count} PGRAPH commands", file=summary_output_stream
+                    )
                     fixed_function_draws = (
                         current_frame_summary.draws_by_pipeline[FrameSummary.PIPELINE_FIXED]
                         + current_frame_summary.draws_by_pipeline[FrameSummary.PIPELINE_ASSUMED_FIXED]
