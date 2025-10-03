@@ -2391,38 +2391,18 @@ def ParseNv097SetFogGenMode(_nv_class, _nv_op, nv_param: int) -> str:
 
 def ParseNv097SetFogMode(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_FOG_MODE command."""
-    results: list[str] = []
-    field_val = nv_param & 0x2601
-    field_map = {
-        0x804: "NV097_SET_FOG_MODE_V_LINEAR_ABS",
+    _VALUES = {
+        2048: "V_EXP",
+        2049: "V_EXP2",
+        2050: "V_EXP_ABS",
+        2051: "V_EXP2_ABS",
+        2052: "V_LINEAR_ABS",
+        9729: "V_LINEAR",
     }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_FOG_MODE_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_FOG_MODE_:0x{field_val:X}")
-    field_val = nv_param & 0x800
-    field_map = {
-        0x802: "NV097_SET_FOG_MODE_V_EXP_ABS",
-    }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_FOG_MODE_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_FOG_MODE_:0x{field_val:X}")
-    field_val = nv_param & 0x801
-    field_map = {
-        0x803: "NV097_SET_FOG_MODE_V_EXP2_ABS",
-    }
-    if field_val in field_map:
-        grandchild_name = field_map[field_val]
-        symbolic_part = grandchild_name.replace("NV097_SET_FOG_MODE_", "", 1)
-        results.append(symbolic_part.replace("_", ":", 1))
-    else:
-        results.append(f"NV097_SET_FOG_MODE_:0x{field_val:X}")
-    return f'{{{', '.join(results)}}}'
+    ret = _VALUES.get(nv_param)
+    if ret:
+        return ret
+    return f"0x{nv_param:X}?"
 
 
 def ParseNv097SetFrontFace(_nv_class, _nv_op, nv_param: int) -> str:
