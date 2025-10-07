@@ -21,6 +21,9 @@ class FrameSummary:
     frame_draw_count: int = 0
     combiner_state: CombinerState = field(default_factory=lambda: CombinerState())
 
+    # Total count of PGRAPH commands processed during this frame
+    frame_op_count: int = 0
+
     common_shader_state: CommonShaderState = field(default_factory=lambda: CommonShaderState())
     fixed_function_shader_state: FixedFunctionPipelineState = field(
         default_factory=lambda: FixedFunctionPipelineState()
@@ -58,10 +61,12 @@ class FrameSummary:
         else:
             self.unique_fixed_function_shaders.add(str(self.fixed_function_shader_state))
 
+        self.frame_op_count += self.common_shader_state.get_total_command_count()
         self.common_shader_state.draw_end()
         self.fixed_function_shader_state.draw_end()
 
     def reset(self):
+        self.frame_op_count = 0
         self.frame_draw_count = 0
         self.surface_dump_count = 0
         self.draws_by_pipeline.clear()

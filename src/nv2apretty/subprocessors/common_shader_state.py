@@ -33,6 +33,10 @@ from nv2apretty.extracted_data import (
     NV097_SET_STENCIL_OP_ZFAIL,
     NV097_SET_STENCIL_OP_ZPASS,
     NV097_SET_STENCIL_TEST_ENABLE,
+    NV097_SET_SURFACE_COLOR_OFFSET,
+    NV097_SET_SURFACE_FORMAT,
+    NV097_SET_SURFACE_PITCH,
+    NV097_SET_SURFACE_ZETA_OFFSET,
     NV097_SET_TEXTURE_ADDRESS,
     NV097_SET_TEXTURE_BORDER_COLOR,
     NV097_SET_TEXTURE_CONTROL0,
@@ -60,17 +64,17 @@ class CommonShaderState(PipelineState):
     def __post_init__(self):
         self._initialize(
             {
+                NV097_DRAW_ARRAYS,
                 NV097_SET_ALPHA_FUNC,
                 NV097_SET_ALPHA_REF,
                 NV097_SET_ALPHA_TEST_ENABLE,
+                NV097_SET_ANTI_ALIASING_CONTROL,
+                NV097_SET_BACK_POLYGON_MODE,
                 NV097_SET_BLEND_COLOR,
                 NV097_SET_BLEND_ENABLE,
                 NV097_SET_BLEND_EQUATION,
                 NV097_SET_BLEND_FUNC_DFACTOR,
                 NV097_SET_BLEND_FUNC_SFACTOR,
-                NV097_DRAW_ARRAYS,
-                NV097_SET_ANTI_ALIASING_CONTROL,
-                NV097_SET_BACK_POLYGON_MODE,
                 NV097_SET_CULL_FACE,
                 NV097_SET_CULL_FACE_ENABLE,
                 NV097_SET_DEPTH_FUNC,
@@ -87,6 +91,10 @@ class CommonShaderState(PipelineState):
                 NV097_SET_STENCIL_OP_ZFAIL,
                 NV097_SET_STENCIL_OP_ZPASS,
                 NV097_SET_STENCIL_TEST_ENABLE,
+                NV097_SET_SURFACE_COLOR_OFFSET,
+                NV097_SET_SURFACE_FORMAT,
+                NV097_SET_SURFACE_PITCH,
+                NV097_SET_SURFACE_ZETA_OFFSET,
                 NV097_SET_TEXTURE_ADDRESS,
                 NV097_SET_TEXTURE_BORDER_COLOR,
                 NV097_SET_TEXTURE_CONTROL0,
@@ -182,7 +190,12 @@ class CommonShaderState(PipelineState):
         return ret
 
     def __str__(self):
-        ret = []
+        ret = [
+            f"\tSurface format: {self._process(NV097_SET_SURFACE_FORMAT)}",
+            f"\tSurface pitch: {self._process(NV097_SET_SURFACE_PITCH)}",
+            f"\tSurface color offset: {self._process(NV097_SET_SURFACE_COLOR_OFFSET)}",
+            f"\tSurface zeta offset: {self._process(NV097_SET_SURFACE_ZETA_OFFSET)}",
+        ]
 
         def render_unusual_only(
             state_guard_op: int, render_func: Callable[[str, int], None], uninteresting_state: int = 0
@@ -242,7 +255,7 @@ class CommonShaderState(PipelineState):
             ret.append(f"\t\tDestination factor: {self._process(NV097_SET_BLEND_FUNC_DFACTOR)}")
             ret.append(f"\t\tColor constant: {self._process(NV097_SET_BLEND_COLOR)}")
 
-        render_unusual_only(NV097_SET_ALPHA_TEST_ENABLE, render_alpha_blend_state)
+        render_unusual_only(NV097_SET_BLEND_ENABLE, render_alpha_blend_state)
 
         poly_front_mode = self._process(NV097_SET_FRONT_POLYGON_MODE)
         if poly_front_mode != "V_FILL":
