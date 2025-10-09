@@ -3,7 +3,7 @@ from __future__ import annotations
 # ruff: noqa: PLR2004 Magic value used in comparison
 import struct
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from nv2apretty.extracted_data import (
     CLASS_TO_COMMAND_PROCESSOR_MAP,
@@ -11,6 +11,9 @@ from nv2apretty.extracted_data import (
     StateArray,
     StructStateArray,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def as_float(int_val: int) -> float:
@@ -26,7 +29,7 @@ def _expand_command_map(nv_commands: set[int]) -> tuple[dict[int, int | StateArr
 
     kelvin_ops: dict[int | StateArray | StructStateArray, Callable] = CLASS_TO_COMMAND_PROCESSOR_MAP.get(0x97, {})
     for op_info in kelvin_ops:
-        base_op = op_info.base if isinstance(op_info, (StateArray, StructStateArray)) else op_info
+        base_op = op_info.base if isinstance(op_info, StateArray | StructStateArray) else op_info
 
         if base_op not in nv_commands:
             continue

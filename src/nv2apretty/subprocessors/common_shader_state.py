@@ -3,7 +3,7 @@ from __future__ import annotations
 # ruff: noqa: PLR2004 Magic value used in comparison
 import re
 from dataclasses import dataclass
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from nv2apretty.extracted_data import (
     NV097_DRAW_ARRAYS,
@@ -53,6 +53,9 @@ from nv2apretty.extracted_data import (
     NV097_SET_VERTEX_DATA_ARRAY_OFFSET,
 )
 from nv2apretty.subprocessors.pipeline_state import PipelineState
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _BITVECTOR_EXPANSION_RE = re.compile(r".*\{(.+)}")
 

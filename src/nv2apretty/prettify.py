@@ -341,7 +341,10 @@ def _process_file(
                         draw_summary(str(current_frame_summary.fixed_function_shader_state), file=summary_output_stream)
 
                     if explain_combiners and suppress_raw_commands:
-                        draw_summary(f"\t{'\n\t\t'.join(current_frame_summary.combiner_state.explain().splitlines())}")
+                        line_suffix = "\n\t\t"
+                        draw_summary(
+                            f"\t{line_suffix.join(current_frame_summary.combiner_state.explain().splitlines())}"
+                        )
 
                     for summary_message in sorted(current_frame_summary.draw_summary_messages):
                         draw_summary(f"  {summary_message}", file=summary_output_stream)
@@ -426,8 +429,15 @@ def _process_file(
         _print_file_summary(log_frame_summaries, file_summary, summary_output_stream)
 
 
+def prettify_file(filename: str, *args, **kwargs):
+    """Prettifies the given nv2a log file."""
+    with open(filename, encoding="utf-8") as infile:
+        lines = [line.rstrip() for line in infile]
+    return prettify(lines, *args, **kwargs)
+
+
 def prettify(
-    filename: str,
+    lines: list[str],
     output: str | None = None,
     *,
     elide: bool = False,
@@ -443,11 +453,7 @@ def prettify(
     suppress_file_summaries: bool = False,
     summary_output_stream: TextIO = sys.stderr,
 ):
-    """Prettifies the given nv2a log file."""
-
-    with open(filename, encoding="utf-8") as infile:
-        lines = [line.rstrip() for line in infile]
-
+    """Prettifies the given nv2a log lines."""
     if output:
         output = os.path.realpath(os.path.expanduser(output))
         with open(output, "w") as out_file, redirect_stdout(out_file):
@@ -495,7 +501,7 @@ def _main(args):
 
     summary_output_stream = sys.stderr if args.summarize_to_stderr else sys.stdout
 
-    prettify(
+    prettify_file(
         filename,
         args.output,
         elide=args.elide,

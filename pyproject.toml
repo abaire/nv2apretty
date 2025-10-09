@@ -9,7 +9,7 @@ name = "nv2a-pretty"
 dynamic = ["version"]
 description = 'Visualizer for xemu/nv2a-trace XBOX GPU (nv2a) logs.'
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 keywords = ["nv2a", "xbox", "nvidia", "xemu"]
 authors = [
@@ -22,7 +22,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Documentation",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
