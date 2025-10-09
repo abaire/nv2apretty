@@ -2149,7 +2149,7 @@ def ParseNv097ClearReportValue(_nv_class, _nv_op, nv_param: int) -> str:
         results.append(symbolic_part.replace("_", ":", 1))
     else:
         results.append(f"NV097_CLEAR_REPORT_VALUE_:0x{field_val:X}")
-    return f'{{{', '.join(results)}}}'
+    return f"{{{', '.join(results)}}}"
 
 
 def ParseNv097ClearSurface(_nv_class, _nv_op, nv_param: int) -> str:
@@ -2184,7 +2184,7 @@ def ParseNv097GetReport(_nv_class, _nv_op, nv_param: int) -> str:
         results.append(symbolic_part.replace("_", ":", 1))
     else:
         results.append(f"NV097_GET_REPORT_:0x{field_val:X}")
-    return f'{{{', '.join(results)}}}'
+    return f"{{{', '.join(results)}}}"
 
 
 def ParseNv097SetAlphaFunc(_nv_class, _nv_op, nv_param: int) -> str:
@@ -2466,7 +2466,7 @@ def ParseNv097SetPointParams(_nv_class, _nv_op, nv_param: int) -> str:
     results.append(f"NV097_SET_POINT_PARAMS_:0x{field_val:X}")
     field_val = nv_param & 0xA4C
     results.append(f"NV097_SET_POINT_PARAMS_:0x{field_val:X}")
-    return f'{{{', '.join(results)}}}'
+    return f"{{{', '.join(results)}}}"
 
 
 def ParseNv097SetShadeMode(_nv_class, _nv_op, nv_param: int) -> str:
@@ -2696,7 +2696,7 @@ def ParseNv097SetTransformExecutionMode(_nv_class, _nv_op, nv_param: int) -> str
         results.append(symbolic_part.replace("_", ":", 1))
     else:
         results.append(f"NV097_SET_TRANSFORM_EXECUTION_MODE_:0x{field_val:X}")
-    return f'{{{', '.join(results)}}}'
+    return f"{{{', '.join(results)}}}"
 
 
 def ParseNv097SetZminMaxControl(_nv_class, _nv_op, nv_param: int) -> str:
