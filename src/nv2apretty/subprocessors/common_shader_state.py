@@ -23,6 +23,12 @@ from nv2apretty.extracted_data import (
     NV097_SET_DEPTH_MASK,
     NV097_SET_DEPTH_TEST_ENABLE,
     NV097_SET_EYE_VECTOR,
+    NV097_SET_FOG_COLOR,
+    NV097_SET_FOG_ENABLE,
+    NV097_SET_FOG_GEN_MODE,
+    NV097_SET_FOG_MODE,
+    NV097_SET_FOG_PARAMS,
+    NV097_SET_FOG_PLANE,
     NV097_SET_FRONT_POLYGON_MODE,
     NV097_SET_SHADER_OTHER_STAGE_INPUT,
     NV097_SET_SHADER_STAGE_PROGRAM,
@@ -84,6 +90,12 @@ class CommonShaderState(PipelineState):
                 NV097_SET_DEPTH_MASK,
                 NV097_SET_DEPTH_TEST_ENABLE,
                 NV097_SET_EYE_VECTOR,
+                NV097_SET_FOG_COLOR,
+                NV097_SET_FOG_ENABLE,
+                NV097_SET_FOG_GEN_MODE,
+                NV097_SET_FOG_MODE,
+                NV097_SET_FOG_PARAMS,
+                NV097_SET_FOG_PLANE,
                 NV097_SET_FRONT_POLYGON_MODE,
                 NV097_SET_SHADER_OTHER_STAGE_INPUT,
                 NV097_SET_SHADER_STAGE_PROGRAM,
@@ -192,6 +204,16 @@ class CommonShaderState(PipelineState):
             ret.append(f"\t\tv{index}: {vertex_format} @ {offset_strings[index]}")
         return ret
 
+    def _expand_fog_info(self) -> list[str]:
+        return [
+            "\tFog:",
+            f"\t\tColor: {self._process(NV097_SET_FOG_COLOR)}",
+            f"\t\tMode: {self._process(NV097_SET_FOG_MODE)}",
+            f"\t\tGeneration mode: {self._process(NV097_SET_FOG_GEN_MODE)}",
+            f"\t\tParams: {self._process(NV097_SET_FOG_PARAMS, default_raw_value=0)}",
+            f"\t\tPlane: {self._process(NV097_SET_FOG_PLANE, default_raw_value=0)}",
+        ]
+
     def __str__(self):
         ret = [
             f"\tSurface format: {self._process(NV097_SET_SURFACE_FORMAT)}",
@@ -224,7 +246,7 @@ class CommonShaderState(PipelineState):
 
         render_unusual_only(
             NV097_SET_DEPTH_MASK,
-            lambda _, state: ret.append(f"\tDepth write: {'<MATBE OFF>' if state < 0 else 'OFF'}"),
+            lambda _, state: ret.append(f"\tDepth write: {'<MAYBE OFF>' if state < 0 else 'OFF'}"),
             uninteresting_state=1,
         )
 
@@ -240,7 +262,7 @@ class CommonShaderState(PipelineState):
 
         render_unusual_only(
             NV097_SET_STENCIL_MASK,
-            lambda _, state: ret.append(f"\tStencil write: {'<MATBE OFF>' if state < 0 else 'OFF'}"),
+            lambda _, state: ret.append(f"\tStencil write: {'<MAYBE OFF>' if state < 0 else 'OFF'}"),
             uninteresting_state=1,
         )
 
@@ -276,5 +298,8 @@ class CommonShaderState(PipelineState):
 
         if self._get_raw_value(NV097_SET_ANTI_ALIASING_CONTROL) is not None:
             ret.append(f"\tAnti-aliasing control: {self._process(NV097_SET_ANTI_ALIASING_CONTROL)}")
+
+        if self._get_raw_value(NV097_SET_FOG_ENABLE) != 0:
+            ret.extend(self._expand_fog_info())
 
         return "\n  ".join(ret)

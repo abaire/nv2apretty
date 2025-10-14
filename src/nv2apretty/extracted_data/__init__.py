@@ -2139,7 +2139,7 @@ def ParseNv062SetColorFormat(_nv_class, _nv_op, nv_param: int) -> str:
 def ParseNv097ClearReportValue(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_CLEAR_REPORT_VALUE command."""
     results: list[str] = []
-    field_val = nv_param & 0xFFFFFFFF
+    field_val = (nv_param & 0xFFFFFFFF) >> 0
     field_map = {
         0x1: "NV097_CLEAR_REPORT_VALUE_TYPE_ZPASS_PIXEL_CNT",
     }
@@ -2148,7 +2148,7 @@ def ParseNv097ClearReportValue(_nv_class, _nv_op, nv_param: int) -> str:
         symbolic_part = grandchild_name.replace("NV097_CLEAR_REPORT_VALUE_", "", 1)
         results.append(symbolic_part.replace("_", ":", 1))
     else:
-        results.append(f"NV097_CLEAR_REPORT_VALUE_:0x{field_val:X}")
+        results.append(f"TYPE:0x{field_val:X}")
     return f"{{{', '.join(results)}}}"
 
 
@@ -2172,9 +2172,9 @@ def ParseNv097ClearSurface(_nv_class, _nv_op, nv_param: int) -> str:
 def ParseNv097GetReport(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_GET_REPORT command."""
     results: list[str] = []
-    field_val = nv_param & 0xFFFFFF
-    results.append(f"NV097_GET_REPORT_:0x{field_val:X}")
-    field_val = nv_param & 0xFF000000
+    field_val = (nv_param & 0xFFFFFF) >> 0
+    results.append(f"OFFSET:0x{field_val:X}")
+    field_val = (nv_param & 0xFF000000) >> 24
     field_map = {
         0x1: "NV097_GET_REPORT_TYPE_ZPASS_PIXEL_CNT",
     }
@@ -2183,7 +2183,7 @@ def ParseNv097GetReport(_nv_class, _nv_op, nv_param: int) -> str:
         symbolic_part = grandchild_name.replace("NV097_GET_REPORT_", "", 1)
         results.append(symbolic_part.replace("_", ":", 1))
     else:
-        results.append(f"NV097_GET_REPORT_:0x{field_val:X}")
+        results.append(f"TYPE:0x{field_val:X}")
     return f"{{{', '.join(results)}}}"
 
 
@@ -2207,13 +2207,10 @@ def ParseNv097SetAlphaFunc(_nv_class, _nv_op, nv_param: int) -> str:
 
 def ParseNv097SetAntiAliasingControl(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_ANTI_ALIASING_CONTROL command."""
-    _VALUES = {
-        1: "ENABLE",
-    }
-    ret = _VALUES.get(nv_param)
-    if ret:
-        return ret
-    return f"0x{nv_param:X}?"
+    results: list[str] = []
+    field_val = (nv_param & 0x1) >> 0
+    results.append(f"ENABLE:0x{field_val:X}")
+    return f"{{{', '.join(results)}}}"
 
 
 def ParseNv097SetBackPolygonMode(_nv_class, _nv_op, nv_param: int) -> str:
@@ -2362,16 +2359,16 @@ def ParseNv097SetFlatShadeOp(_nv_class, _nv_op, nv_param: int) -> str:
 
 def ParseNv097SetFogColor(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_FOG_COLOR command."""
-    _VALUES = {
-        255: "RED",
-        65280: "GREEN",
-        16711680: "BLUE",
-        4278190080: "ALPHA",
-    }
-    ret = _VALUES.get(nv_param)
-    if ret:
-        return ret
-    return f"0x{nv_param:X}?"
+    results: list[str] = []
+    field_val = (nv_param & 0xFF) >> 0
+    results.append(f"RED:0x{field_val:X}")
+    field_val = (nv_param & 0xFF00) >> 8
+    results.append(f"GREEN:0x{field_val:X}")
+    field_val = (nv_param & 0xFF0000) >> 16
+    results.append(f"BLUE:0x{field_val:X}")
+    field_val = (nv_param & 0xFF000000) >> 24
+    results.append(f"ALPHA:0x{field_val:X}")
+    return f"{{{', '.join(results)}}}"
 
 
 def ParseNv097SetFogGenMode(_nv_class, _nv_op, nv_param: int) -> str:
@@ -2445,13 +2442,13 @@ def ParseNv097SetLineWidth(_nv_class, _nv_op, nv_param: int) -> str:
 def ParseNv097SetPointParams(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_POINT_PARAMS command."""
     results: list[str] = []
-    field_val = nv_param & 0xA30
-    results.append(f"NV097_SET_POINT_PARAMS_:0x{field_val:X}")
-    field_val = nv_param & 0xA34
-    results.append(f"NV097_SET_POINT_PARAMS_:0x{field_val:X}")
-    field_val = nv_param & 0xA38
-    results.append(f"NV097_SET_POINT_PARAMS_:0x{field_val:X}")
-    field_val = nv_param & 0xA3C
+    field_val = (nv_param & 0xA30) >> 4
+    results.append(f"SCALE_FACTOR_A:0x{field_val:X}")
+    field_val = (nv_param & 0xA34) >> 2
+    results.append(f"SCALE_FACTOR_B:0x{field_val:X}")
+    field_val = (nv_param & 0xA38) >> 3
+    results.append(f"SCALE_FACTOR_C:0x{field_val:X}")
+    field_val = (nv_param & 0xA3C) >> 2
     field_map = {
         0xA40: "NV097_SET_POINT_PARAMS_SIZE_RANGE_DUP_1",
         0xA44: "NV097_SET_POINT_PARAMS_SIZE_RANGE_DUP_2",
@@ -2461,11 +2458,11 @@ def ParseNv097SetPointParams(_nv_class, _nv_op, nv_param: int) -> str:
         symbolic_part = grandchild_name.replace("NV097_SET_POINT_PARAMS_", "", 1)
         results.append(symbolic_part.replace("_", ":", 1))
     else:
-        results.append(f"NV097_SET_POINT_PARAMS_:0x{field_val:X}")
-    field_val = nv_param & 0xA48
-    results.append(f"NV097_SET_POINT_PARAMS_:0x{field_val:X}")
-    field_val = nv_param & 0xA4C
-    results.append(f"NV097_SET_POINT_PARAMS_:0x{field_val:X}")
+        results.append(f"SIZE_RANGE:0x{field_val:X}")
+    field_val = (nv_param & 0xA48) >> 3
+    results.append(f"SCALE_BIAS:0x{field_val:X}")
+    field_val = (nv_param & 0xA4C) >> 2
+    results.append(f"MIN_SIZE:0x{field_val:X}")
     return f"{{{', '.join(results)}}}"
 
 
@@ -2674,7 +2671,7 @@ def ParseNv097SetTextureImageRect(_nv_class, _nv_op, nv_param: int) -> str:
 def ParseNv097SetTransformExecutionMode(_nv_class, _nv_op, nv_param: int) -> str:
     """Parses the components of a NV097_SET_TRANSFORM_EXECUTION_MODE command."""
     results: list[str] = []
-    field_val = nv_param & 0x3
+    field_val = (nv_param & 0x3) >> 0
     field_map = {
         0x0: "NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED",
         0x2: "NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM",
@@ -2684,8 +2681,8 @@ def ParseNv097SetTransformExecutionMode(_nv_class, _nv_op, nv_param: int) -> str
         symbolic_part = grandchild_name.replace("NV097_SET_TRANSFORM_EXECUTION_MODE_", "", 1)
         results.append(symbolic_part.replace("_", ":", 1))
     else:
-        results.append(f"NV097_SET_TRANSFORM_EXECUTION_MODE_:0x{field_val:X}")
-    field_val = nv_param & 0xFFFFFFFC
+        results.append(f"MODE:0x{field_val:X}")
+    field_val = (nv_param & 0xFFFFFFFC) >> 2
     field_map = {
         0x0: "NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_USER",
         0x1: "NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV",
@@ -2695,7 +2692,7 @@ def ParseNv097SetTransformExecutionMode(_nv_class, _nv_op, nv_param: int) -> str
         symbolic_part = grandchild_name.replace("NV097_SET_TRANSFORM_EXECUTION_MODE_", "", 1)
         results.append(symbolic_part.replace("_", ":", 1))
     else:
-        results.append(f"NV097_SET_TRANSFORM_EXECUTION_MODE_:0x{field_val:X}")
+        results.append(f"RANGE_MODE:0x{field_val:X}")
     return f"{{{', '.join(results)}}}"
 
 
