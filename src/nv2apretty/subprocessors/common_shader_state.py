@@ -30,6 +30,7 @@ from nv2apretty.extracted_data import (
     NV097_SET_FOG_PARAMS,
     NV097_SET_FOG_PLANE,
     NV097_SET_FRONT_POLYGON_MODE,
+    NV097_SET_SHADER_CLIP_PLANE_MODE,
     NV097_SET_SHADER_OTHER_STAGE_INPUT,
     NV097_SET_SHADER_STAGE_PROGRAM,
     NV097_SET_STENCIL_FUNC_MASK,
@@ -97,6 +98,7 @@ class CommonShaderState(PipelineState):
                 NV097_SET_FOG_PARAMS,
                 NV097_SET_FOG_PLANE,
                 NV097_SET_FRONT_POLYGON_MODE,
+                NV097_SET_SHADER_CLIP_PLANE_MODE,
                 NV097_SET_SHADER_OTHER_STAGE_INPUT,
                 NV097_SET_SHADER_STAGE_PROGRAM,
                 NV097_SET_STENCIL_FUNC_MASK,
@@ -128,10 +130,10 @@ class CommonShaderState(PipelineState):
         )
 
     def _expand_texture_stage_states(self, texture_stage_program_string: str) -> list[str]:
-        light_enabled_state_pairs = texture_stage_program_string.split(", ")
+        texture_stage_state_pairs = texture_stage_program_string.split(", ")
 
         ret: list[str] = []
-        for index, status_string in enumerate(light_enabled_state_pairs):
+        for index, status_string in enumerate(texture_stage_state_pairs):
             elements = status_string.split(":")
             if len(elements) != 2 or elements[1] == "NONE":
                 continue
@@ -187,6 +189,9 @@ class CommonShaderState(PipelineState):
                 "?0x11" "DOT_REFLECT_SPECULAR_CONST",
             }:
                 explain("Eye vector", self._process(NV097_SET_EYE_VECTOR))
+
+            if self._get_raw_value(NV097_SET_SHADER_CLIP_PLANE_MODE):
+                explain("Clip plane comparators", self._process(NV097_SET_SHADER_CLIP_PLANE_MODE))
 
         return ret
 
