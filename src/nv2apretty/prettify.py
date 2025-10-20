@@ -300,8 +300,6 @@ def _process_file(
                     _print_elided_command_summary(elided_commands)
                     elided_commands = defaultdict(list)
                 inside_begin_end = False
-            elif block_marker == Tag.BEGIN_TAG and explain_combiners:
-                raw(current_frame_summary.combiner_state.explain())
             elif block_marker == Tag.PIPELINE:
                 if summary_text:
                     current_frame_summary.pipeline = summary_text
@@ -340,7 +338,7 @@ def _process_file(
                     if current_frame_summary.is_fixed_function:
                         draw_summary(str(current_frame_summary.fixed_function_shader_state), file=summary_output_stream)
 
-                    if explain_combiners and suppress_raw_commands:
+                    if explain_combiners:
                         line_suffix = "\n\t\t"
                         draw_summary(
                             f"\t{line_suffix.join(current_frame_summary.combiner_state.explain().splitlines())}"
@@ -349,6 +347,9 @@ def _process_file(
                     for summary_message in sorted(current_frame_summary.draw_summary_messages):
                         draw_summary(f"  {summary_message}", file=summary_output_stream)
                     draw_summary("\n", file=summary_output_stream)
+                elif explain_combiners:
+                    raw(current_frame_summary.combiner_state.explain())
+
                 if add_blank_after_end:
                     raw("\n")
                 current_frame_summary.draw_end()
@@ -451,7 +452,7 @@ def prettify(
     suppress_draw_summaries: bool = False,
     suppress_frame_summaries: bool = False,
     suppress_file_summaries: bool = False,
-    summary_output_stream: TextIO = sys.stderr,
+    summary_output_stream: TextIO | None = None,
 ):
     """Prettifies the given nv2a log lines."""
     if output:
@@ -470,7 +471,7 @@ def prettify(
                 suppress_draw_summaries=suppress_draw_summaries,
                 suppress_frame_summaries=suppress_frame_summaries,
                 suppress_file_summaries=suppress_file_summaries,
-                summary_output_stream=summary_output_stream,
+                summary_output_stream=sys.stdout,
             )
     else:
         _process_file(
@@ -486,7 +487,7 @@ def prettify(
             suppress_draw_summaries=suppress_draw_summaries,
             suppress_frame_summaries=suppress_frame_summaries,
             suppress_file_summaries=suppress_file_summaries,
-            summary_output_stream=summary_output_stream,
+            summary_output_stream=summary_output_stream if summary_output_stream else sys.stderr,
         )
 
 
