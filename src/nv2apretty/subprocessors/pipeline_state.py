@@ -69,6 +69,8 @@ class PipelineState:
     _command_to_info: dict[int, int | StateArray | StructStateArray] = field(default_factory=dict)
     _command_filter: set[int] = field(default_factory=set)
 
+    _last_draw_primitive: int | None = None
+
     def _initialize(self, tracked_ops: set[int]):
         self.command_to_info, self.command_filter = _expand_command_map(tracked_ops)
 
@@ -77,6 +79,10 @@ class PipelineState:
         if nv_op not in self.command_filter:
             return
         self._state[nv_op] = nv_param
+
+    def draw_begin(self, primitive_mode: int):
+        """Should be invoked whenever a NV097_SET_BEGIN_END with a non-end parameter is processed"""
+        self._last_draw_primitive = primitive_mode
 
     def draw_end(self):
         """Should be invoked whenever a NV097_SET_BEGIN_END with an 'end' parameter is processed."""

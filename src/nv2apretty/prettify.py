@@ -321,7 +321,7 @@ def _process_file(
                         f"frame_draw {current_frame_summary.frame_draw_count} surface_dump {current_frame_summary.surface_dump_count}"
                     )
                     current_frame_summary.surface_dump_count += 1
-                current_frame_summary.draw_begin()
+                current_frame_summary.draw_begin(nv_param)
             elif block_marker == Tag.END_TAG:
                 if summarize:
                     draw_summary(

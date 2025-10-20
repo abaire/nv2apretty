@@ -45,9 +45,11 @@ class FrameSummary:
     def is_fixed_function(self) -> bool:
         return self.pipeline in {FrameSummary.PIPELINE_FIXED, FrameSummary.PIPELINE_ASSUMED_FIXED}
 
-    def draw_begin(self):
+    def draw_begin(self, primitive_mode: int):
         """Should be invoked whenever a NV097_SET_BEGIN_END with a non-end parameter is processed"""
         self.frame_draw_count += 1
+        self.common_shader_state.draw_begin(primitive_mode)
+        self.fixed_function_shader_state.draw_begin(primitive_mode)
 
     def draw_end(self):
         """Should be invoked whenever a NV097_SET_BEGIN_END with an 'end' parameter is processed"""

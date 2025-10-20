@@ -30,6 +30,10 @@ from nv2apretty.extracted_data import (
     NV097_SET_FOG_PARAMS,
     NV097_SET_FOG_PLANE,
     NV097_SET_FRONT_POLYGON_MODE,
+    NV097_SET_POINT_PARAMS,
+    NV097_SET_POINT_PARAMS_ENABLE,
+    NV097_SET_POINT_SIZE,
+    NV097_SET_POINT_SMOOTH_ENABLE,
     NV097_SET_SHADER_CLIP_PLANE_MODE,
     NV097_SET_SHADER_OTHER_STAGE_INPUT,
     NV097_SET_SHADER_STAGE_PROGRAM,
@@ -58,6 +62,7 @@ from nv2apretty.extracted_data import (
     NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE,
     NV097_SET_VERTEX_DATA_ARRAY_FORMAT,
     NV097_SET_VERTEX_DATA_ARRAY_OFFSET,
+    NV097_SET_ZPASS_PIXEL_COUNT_ENABLE,
 )
 from nv2apretty.subprocessors.pipeline_state import PipelineState
 
@@ -65,6 +70,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 _BITVECTOR_EXPANSION_RE = re.compile(r".*\{(.+)}")
+
+
+PRIMITIVE_OP_POINTS = 1
 
 
 @dataclass
@@ -98,6 +106,10 @@ class CommonShaderState(PipelineState):
                 NV097_SET_FOG_PARAMS,
                 NV097_SET_FOG_PLANE,
                 NV097_SET_FRONT_POLYGON_MODE,
+                NV097_SET_POINT_PARAMS,
+                NV097_SET_POINT_PARAMS_ENABLE,
+                NV097_SET_POINT_SIZE,
+                NV097_SET_POINT_SMOOTH_ENABLE,
                 NV097_SET_SHADER_CLIP_PLANE_MODE,
                 NV097_SET_SHADER_OTHER_STAGE_INPUT,
                 NV097_SET_SHADER_STAGE_PROGRAM,
@@ -126,6 +138,7 @@ class CommonShaderState(PipelineState):
                 NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE,
                 NV097_SET_VERTEX_DATA_ARRAY_FORMAT,
                 NV097_SET_VERTEX_DATA_ARRAY_OFFSET,
+                NV097_SET_ZPASS_PIXEL_COUNT_ENABLE,
             }
         )
 
@@ -219,6 +232,17 @@ class CommonShaderState(PipelineState):
             f"\t\tPlane: {self._process(NV097_SET_FOG_PLANE, default_raw_value=0)}",
         ]
 
+    def _expand_point_info(self) -> list[str]:
+        ret = [
+            "\tPoint config:",
+            f"\t\tSize: {self._process(NV097_SET_POINT_SIZE)}",
+            f"\t\tSmoothing: {self._process(NV097_SET_POINT_SMOOTH_ENABLE)}",
+        ]
+
+        if self._get_raw_value(NV097_SET_POINT_PARAMS_ENABLE) != 0:
+            ret.append(f"\t\tParams:{self._process(NV097_SET_POINT_PARAMS)}")
+        return ret
+
     def __str__(self):
         ret = [
             f"\tSurface format: {self._process(NV097_SET_SURFACE_FORMAT)}",
@@ -306,5 +330,11 @@ class CommonShaderState(PipelineState):
 
         if self._get_raw_value(NV097_SET_FOG_ENABLE) != 0:
             ret.extend(self._expand_fog_info())
+
+        if self._last_draw_primitive == PRIMITIVE_OP_POINTS:
+            ret.extend(self._expand_point_info())
+
+        if self._get_raw_value(NV097_SET_ZPASS_PIXEL_COUNT_ENABLE):
+            ret.append("\tZ-pass pixel count report enabled")
 
         return "\n  ".join(ret)
