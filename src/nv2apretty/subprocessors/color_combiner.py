@@ -381,9 +381,9 @@ class CombinerState:
 
                 if has_blue_to_alpha:
                     if output.AB_BLUE_TO_ALPHA:
-                        ret.append("  {ab_dst}.a = {ab_dst}.b")
+                        ret.append(f"  {ab_dst}.a = {ab_dst}.b")
                     if output.CD_BLUE_TO_ALPHA:
-                        ret.append("  {cd_dst}.a = {cd_dst}.b")
+                        ret.append(f"  {cd_dst}.a = {cd_dst}.b")
 
             color_a, color_b, color_c, color_d = _process_icw(ICWBitField(self.color_inputs[i]))
             color_output = ColorOCWBitField(self.color_outputs[i])
