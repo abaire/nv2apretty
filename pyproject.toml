@@ -37,6 +37,7 @@ Source = "https://github.com/abaire/nv2apretty"
 
 [project.scripts]
 nv2apretty = "nv2apretty:prettify_file"
+nv2apretty-psd = "nv2apretty.pixel_shader_definition:entrypoint"
 
 [tool.hatch.version]
 path = "src/nv2apretty/__about__.py"
