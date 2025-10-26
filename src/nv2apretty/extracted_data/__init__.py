@@ -1313,6 +1313,44 @@ def _process_set_texgen_q(_nv_class, _nv_op, nv_param):
     return param_info + f" {setting}"
 
 
+def _process_set_dot_rgbmapping(_nv_class, _nv_op, nv_param):
+    param_info = "0x%X" % nv_param
+
+    class BitField(ctypes.LittleEndianStructure):
+        _fields_ = [
+            ("STAGE_1", ctypes.c_uint32, 4),
+            ("STAGE_2", ctypes.c_uint32, 4),
+            ("STAGE_3", ctypes.c_uint32, 4),
+        ]
+
+        def __new__(cls, *args, **kwargs):
+            if args:
+                return cls.from_buffer_copy(args[0].to_bytes(4, byteorder=sys.byteorder))
+            return super().__new__()
+
+        def __str__(self):
+            elements = []
+
+            mode = [
+                "0:1",
+                "-1:1 MS",
+                "-1:1 GL",
+                "-1:1 NV",
+                "HiLo 1",
+                "HiLo Hemisphere MS",
+                "HiLo Hemisphere GL",
+                "HiLo Hemisphere NV",
+            ]
+            elements.append(f"Stage1: {mode[self.STAGE_1]}")
+            elements.append(f"Stage2: {mode[self.STAGE_2]}")
+            elements.append(f"Stage3: {mode[self.STAGE_3]}")
+
+            return "{%s}" % ", ".join(elements)
+
+    fmt = BitField(nv_param)
+    return param_info + f" {fmt}"
+
+
 NV012_SET_BETA = 0x300
 NV012_SET_OBJECT = 0x0
 NV019_CONTEXT_CLIP_RECTANGLE_SET_OBJECT = 0x0
@@ -2976,7 +3014,7 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         NV097_SET_SHADOW_ZSLOPE_THRESHOLD: _process_passthrough,
         NV097_SET_SHADOW_COMPARE_FUNC: ParseNv097SetShadowCompareFunc,
         NV097_SET_SHADER_STAGE_PROGRAM: process_shader_stage_program,
-        NV097_SET_DOT_RGBMAPPING: _process_passthrough,
+        NV097_SET_DOT_RGBMAPPING: _process_set_dot_rgbmapping,
         NV097_SET_SHADER_OTHER_STAGE_INPUT: _process_set_other_stage_input,
         StateArray(NV097_SET_TRANSFORM_DATA, 0x4, 4): _process_float_param,
         NV097_LAUNCH_TRANSFORM_PROGRAM: _process_passthrough,
