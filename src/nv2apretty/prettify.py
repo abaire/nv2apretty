@@ -35,7 +35,8 @@ from xml.sax import saxutils
 
 from nv2a_vsh import disassemble
 
-from nv2apretty import deep_processing, pvideo
+import nv2apretty.extracted_data as deep_processing
+from nv2apretty import pvideo
 from nv2apretty.subprocessors.frame_summary import FrameSummary
 
 if TYPE_CHECKING:
