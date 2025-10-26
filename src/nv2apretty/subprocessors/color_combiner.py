@@ -283,7 +283,13 @@ class CombinerState:
             self.factor1s[index] = nv_param
             return
 
-    def explain(self) -> str:
+    def explain(
+        self,
+        c0_mappings: list[int | None] | None = None,
+        c1_mappings: list[int | None] | None = None,
+        final_combiner_c0_mapping: int | None = None,
+        final_combiner_c1_mapping: int | None = None,
+    ) -> str:
         ret = ["// Color combiner:"]
 
         control = CombinerControlBitField(self.control)
@@ -308,10 +314,15 @@ class CombinerState:
             return f"{mapping}({src}{alpha_str})"
 
         for i in range(control.COUNT):
-            ret.append(f"{i}:")
+            ret.append(f"Stage {i}:")
 
-            factor_0 = ColorFactorBitField(self.factor0s[i] if control.FACTOR_0 else self.factor0s[0])
-            factor_1 = ColorFactorBitField(self.factor1s[i] if control.FACTOR_1 else self.factor1s[0])
+            factor_0 = str(ColorFactorBitField(self.factor0s[i] if control.FACTOR_0 else self.factor0s[0]))
+            if c0_mappings and c0_mappings[i] is not None:
+                factor_0 += f' - Possibly overridden from Direct3D "register" {c0_mappings[i]}'
+
+            factor_1 = str(ColorFactorBitField(self.factor1s[i] if control.FACTOR_1 else self.factor1s[0]))
+            if c1_mappings and c1_mappings[i] is not None:
+                factor_1 += f' - Possibly overridden from Direct3D "register" {c1_mappings[i]}'
 
             def _process_icw(bitfield: ICWBitField):
                 a_src = _ICW_SRC_VALUES[bitfield.A_SOURCE]
@@ -458,19 +469,31 @@ class CombinerState:
         if output_1.SPECULAR_CLAMP:
             flags.append("specular_clamp")
 
+        ret.append("Final combiner:")
+
         all_components = {a_component, b_component, c_component, d_component, e_component, f_component, g_component}
         if any("C0" in input_slot for input_slot in all_components):
-            ret.append(f"C0 = {ColorFactorBitField(self.final_combiner_constant0)}")
-        if any("C1" in input_slot for input_slot in all_components):
-            ret.append(f"C1 = {ColorFactorBitField(self.final_combiner_constant1)}")
+            fc_c0 = str(ColorFactorBitField(self.final_combiner_constant0))
 
-        ret.append(f"EFProd = {e_component} * {f_component}")
+            if final_combiner_c0_mapping is not None:
+                fc_c0 += f' - Possibly overridden from Direct3D "register" {final_combiner_c0_mapping}'
+
+            ret.append(f"  C0 = {fc_c0}")
+
+        if any("C1" in input_slot for input_slot in all_components):
+            fc_c1 = str(ColorFactorBitField(self.final_combiner_constant1))
+
+            if final_combiner_c1_mapping is not None:
+                fc_c1 += f' - Possibly overridden from Direct3D "register" {final_combiner_c1_mapping}'
+            ret.append(f"  C1 = {fc_c1}")
+
+        ret.append(f"  EFProd = {e_component} * {f_component}")
 
         if flags:
             flags_str = ", ".join(flags)
-            ret.append(f"Flags = {flags_str}")
-        ret.append(f"out.rgb = {d_component} + mix({c_component}, {b_component}, {a_component}")
-        ret.append(f"out.a = {g_component}")
+            ret.append(f"  Flags = {flags_str}")
+        ret.append(f"  out.rgb = {d_component} + mix({c_component}, {b_component}, {a_component}")
+        ret.append(f"  out.a = {g_component}")
         ret.append("")
 
         return "\n".join(ret)

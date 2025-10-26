@@ -164,7 +164,31 @@ class PixelShaderDefinition:
 
         state.update(NV097_SET_COMBINER_CONTROL, self.ps_combiner_count)
 
-        ret = [state.explain()]
+        def _mapping_name(val: int) -> int | None:
+            if val == 0xF:
+                return None
+            return val
+
+        def _expand_constant_mapping(val: int) -> list[int | None]:
+            def _extract(stage: int) -> int | None:
+                return _mapping_name((val >> (4 * stage)) & 0xF)
+
+            return [_extract(stage) for stage in range(8)]
+
+        c0_mappings = _expand_constant_mapping(self.ps_c0_mapping)
+        c1_mappings = _expand_constant_mapping(self.ps_c1_mapping)
+        fc_c0_mapping = _mapping_name(self.ps_final_combiner_constants & 0x0F)
+        fc_c1_mapping = _mapping_name((self.ps_final_combiner_constants >> 4) & 0x0F)
+        fc_texmode_adjust = (self.ps_final_combiner_constants >> 8) & 0x0F
+
+        ret = [
+            state.explain(
+                c0_mappings=c0_mappings,
+                c1_mappings=c1_mappings,
+                final_combiner_c0_mapping=fc_c0_mapping,
+                final_combiner_c1_mapping=fc_c1_mapping,
+            )
+        ]
 
         dot_mappings = self._expand_dot_mappings()
         texture_modes = self._expand_texture_modes()
@@ -189,31 +213,6 @@ class PixelShaderDefinition:
             # No inputs are available to stage 0
             if texture_stage > 0:
                 ret.append(f"\tInput stage: {input_textures[texture_stage]}")
-
-        def _mapping_name(val: int) -> str:
-            if val == 0xF:
-                return "n/a"
-            return str(val)
-
-        def _expand_constant_mapping(val: int) -> list[str]:
-            def _extract(stage: int) -> str:
-                return _mapping_name((val >> (4 * stage)) & 0xF)
-
-            return [_extract(stage) for stage in range(8)]
-
-        ret.extend(
-            [
-                "",
-                "Constant mappings:",
-                f"\tC0: {_expand_constant_mapping(self.ps_c0_mapping)}",
-                f"\tC1: {_expand_constant_mapping(self.ps_c1_mapping)}",
-            ]
-        )
-
-        fc_c0_mapping = _mapping_name(self.ps_final_combiner_constants & 0x0F)
-        fc_c1_mapping = _mapping_name((self.ps_final_combiner_constants >> 4) & 0x0F)
-        fc_texmode_adjust = (self.ps_final_combiner_constants >> 8) & 0x0F
-        ret.append(f"\tFinal combiner: C0: {fc_c0_mapping} C1: {fc_c1_mapping}")
 
         if fc_texmode_adjust:
             ret.append("D3D texture mode remapping enabled")
