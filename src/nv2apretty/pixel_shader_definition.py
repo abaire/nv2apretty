@@ -164,13 +164,13 @@ class PixelShaderDefinition:
 
         state.update(NV097_SET_COMBINER_CONTROL, self.ps_combiner_count)
 
-        def _mapping_name(val: int) -> str | None:
+        def _mapping_name(val: int) -> int | None:
             if val == 0xF:
                 return None
-            return str(val)
+            return val
 
-        def _expand_constant_mapping(val: int) -> list[str | None]:
-            def _extract(stage: int) -> str | None:
+        def _expand_constant_mapping(val: int) -> list[int | None]:
+            def _extract(stage: int) -> int | None:
                 return _mapping_name((val >> (4 * stage)) & 0xF)
 
             return [_extract(stage) for stage in range(8)]

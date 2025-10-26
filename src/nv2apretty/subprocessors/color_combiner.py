@@ -314,7 +314,7 @@ class CombinerState:
             return f"{mapping}({src}{alpha_str})"
 
         for i in range(control.COUNT):
-            ret.append(f"{i}:")
+            ret.append(f"Stage {i}:")
 
             factor_0 = str(ColorFactorBitField(self.factor0s[i] if control.FACTOR_0 else self.factor0s[0]))
             if c0_mappings and c0_mappings[i] is not None:
@@ -469,6 +469,8 @@ class CombinerState:
         if output_1.SPECULAR_CLAMP:
             flags.append("specular_clamp")
 
+        ret.append("Final combiner:")
+
         all_components = {a_component, b_component, c_component, d_component, e_component, f_component, g_component}
         if any("C0" in input_slot for input_slot in all_components):
             fc_c0 = str(ColorFactorBitField(self.final_combiner_constant0))
@@ -476,22 +478,22 @@ class CombinerState:
             if final_combiner_c0_mapping is not None:
                 fc_c0 += f' - Possibly overridden from Direct3D "register" {final_combiner_c0_mapping}'
 
-            ret.append(f"C0 = {fc_c0}")
+            ret.append(f"  C0 = {fc_c0}")
 
         if any("C1" in input_slot for input_slot in all_components):
             fc_c1 = str(ColorFactorBitField(self.final_combiner_constant1))
 
             if final_combiner_c1_mapping is not None:
                 fc_c1 += f' - Possibly overridden from Direct3D "register" {final_combiner_c1_mapping}'
-            ret.append(f"C1 = {fc_c1}")
+            ret.append(f"  C1 = {fc_c1}")
 
-        ret.append(f"EFProd = {e_component} * {f_component}")
+        ret.append(f"  EFProd = {e_component} * {f_component}")
 
         if flags:
             flags_str = ", ".join(flags)
-            ret.append(f"Flags = {flags_str}")
-        ret.append(f"out.rgb = {d_component} + mix({c_component}, {b_component}, {a_component}")
-        ret.append(f"out.a = {g_component}")
+            ret.append(f"  Flags = {flags_str}")
+        ret.append(f"  out.rgb = {d_component} + mix({c_component}, {b_component}, {a_component}")
+        ret.append(f"  out.a = {g_component}")
         ret.append("")
 
         return "\n".join(ret)
