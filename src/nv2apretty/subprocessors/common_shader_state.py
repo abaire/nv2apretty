@@ -34,9 +34,15 @@ from nv2apretty.extracted_data import (
     NV097_SET_POINT_PARAMS_ENABLE,
     NV097_SET_POINT_SIZE,
     NV097_SET_POINT_SMOOTH_ENABLE,
+    NV097_SET_POLY_OFFSET_FILL_ENABLE,
+    NV097_SET_POLY_OFFSET_LINE_ENABLE,
+    NV097_SET_POLY_OFFSET_POINT_ENABLE,
+    NV097_SET_POLYGON_OFFSET_BIAS,
+    NV097_SET_POLYGON_OFFSET_SCALE_FACTOR,
     NV097_SET_SHADER_CLIP_PLANE_MODE,
     NV097_SET_SHADER_OTHER_STAGE_INPUT,
     NV097_SET_SHADER_STAGE_PROGRAM,
+    NV097_SET_SHADOW_DEPTH_FUNC,
     NV097_SET_STENCIL_FUNC_MASK,
     NV097_SET_STENCIL_FUNC_REF,
     NV097_SET_STENCIL_MASK,
@@ -110,9 +116,15 @@ class CommonShaderState(PipelineState):
                 NV097_SET_POINT_PARAMS_ENABLE,
                 NV097_SET_POINT_SIZE,
                 NV097_SET_POINT_SMOOTH_ENABLE,
+                NV097_SET_POLYGON_OFFSET_BIAS,
+                NV097_SET_POLYGON_OFFSET_SCALE_FACTOR,
+                NV097_SET_POLY_OFFSET_FILL_ENABLE,
+                NV097_SET_POLY_OFFSET_LINE_ENABLE,
+                NV097_SET_POLY_OFFSET_POINT_ENABLE,
                 NV097_SET_SHADER_CLIP_PLANE_MODE,
                 NV097_SET_SHADER_OTHER_STAGE_INPUT,
                 NV097_SET_SHADER_STAGE_PROGRAM,
+                NV097_SET_SHADOW_DEPTH_FUNC,
                 NV097_SET_STENCIL_FUNC_MASK,
                 NV097_SET_STENCIL_FUNC_REF,
                 NV097_SET_STENCIL_MASK,
@@ -164,6 +176,9 @@ class CommonShaderState(PipelineState):
 
             format_str = self._process(NV097_SET_TEXTURE_FORMAT, default_raw_value=0)[index]
             explain("Format", format_str)
+
+            if "DEPTH" in format_str:
+                explain("Shadow depth func", self._process(NV097_SET_SHADOW_DEPTH_FUNC))
 
             address_str = self._process(NV097_SET_TEXTURE_ADDRESS, default_raw_value=0)[index]
             explain("Address", address_str)
@@ -336,5 +351,20 @@ class CommonShaderState(PipelineState):
 
         if self._get_raw_value(NV097_SET_ZPASS_PIXEL_COUNT_ENABLE):
             ret.append("\tZ-pass pixel count report enabled")
+
+        polyoffset_fill = self._get_raw_value(NV097_SET_POLY_OFFSET_FILL_ENABLE)
+        polyoffset_line = self._get_raw_value(NV097_SET_POLY_OFFSET_LINE_ENABLE)
+        polyoffset_point = self._get_raw_value(NV097_SET_POLY_OFFSET_POINT_ENABLE)
+        if any({polyoffset_fill, polyoffset_line, polyoffset_point}):
+            ret.extend(
+                [
+                    "\tPolygon offset:",
+                    f"\t\tFill: {bool(polyoffset_fill)}",
+                    f"\t\tLine: {bool(polyoffset_line)}",
+                    f"\t\tPoint: {bool(polyoffset_point)}",
+                    f"\t\tBias: {self._process(NV097_SET_POLYGON_OFFSET_BIAS)}",
+                    f"\t\tScale: {self._process(NV097_SET_POLYGON_OFFSET_SCALE_FACTOR)}",
+                ]
+            )
 
         return "\n  ".join(ret)
