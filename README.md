@@ -14,3 +14,7 @@ Or use the Anvil hosted version at https://unfortunate-soupy-entry.anvil.app/
 Binary blobs (or b-prefixed byte strings) containing `D3DPIXELSHADERDEF` structs
 may be expanded into color combiner explanations using the pixel shader def
 tool, `nv2apretty-psd`.
+
+# Development
+
+See https://github.com/abaire/nv2a-define-collator for generation of most of the parsers/prettifiers.
