@@ -1143,7 +1143,11 @@ def _process_set_texture_filter(_nv_class, _nv_op, nv_param):
         def __str__(self):
             elements = []
 
-            elements.append(f"LODBias:{self.LOD_BIAS / 256}")
+            sign_extended_bias = self.LOD_BIAS
+            if sign_extended_bias & (1 << 12):
+                sign_extended_bias |= ~0x00001FFF
+
+            elements.append(f"LODBias:{sign_extended_bias / 256.0}")
 
             if self.CONVOLUTION_KERNEL == 1:
                 elements.append("Quincunx")
