@@ -2936,7 +2936,7 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         StateArray(NV097_SET_NORMAL3F, 0x4, 3): _process_float_param,
         NV097_SET_NORMAL3S: _process_passthrough,
         NV097_SET_DIFFUSE_COLOR4F: _process_float_param,
-        NV097_SET_DIFFUSE_COLOR3F: _process_float_param,
+        StateArray(NV097_SET_DIFFUSE_COLOR3F, 0x4, 3): _process_float_param,
         NV097_SET_DIFFUSE_COLOR4I: _process_passthrough,
         NV097_SET_SPECULAR_COLOR4F: _process_float_param,
         NV097_SET_SPECULAR_COLOR3F: _process_float_param,
