@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-# ruff: noqa: PLR2004 Magic value used in comparison
 import struct
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any

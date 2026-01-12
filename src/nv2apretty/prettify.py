@@ -13,7 +13,6 @@ to:
 nv2a_pgraph_method 0: NV20_KELVIN_PRIMITIVE<0x97> -> NV097_SET_COMBINER_SPECULAR_FOG_CW0<0x288> (0xC {[A: Zero], [B: Zero], [C: Zero], [D: R0Temp]})
 """
 
-# ruff: noqa: T201 `print` found
 # ruff: noqa: PLR2004 Magic value used in comparison
 # ruff: noqa: FBT001 Boolean-typed positional argument in function definition
 # ruff: noqa: FBT002 Boolean default positional argument in function definition

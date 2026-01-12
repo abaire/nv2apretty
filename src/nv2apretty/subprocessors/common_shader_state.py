@@ -214,7 +214,8 @@ class CommonShaderState(PipelineState):
             elif pixel_shader_mode in {
                 "DOT_REFLECT_DIFFUSE",
                 "DOT_REFLECT_SPECULAR",
-                "?0x11" "DOT_REFLECT_SPECULAR_CONST",
+                "?0x11",
+                "DOT_REFLECT_SPECULAR_CONST",
             }:
                 explain("Eye vector", self._process(NV097_SET_EYE_VECTOR))
 
