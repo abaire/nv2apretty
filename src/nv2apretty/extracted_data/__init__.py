@@ -746,7 +746,8 @@ def process_shader_stage_program(_nv_class, _nv_op, nv_param):
                 "DOT_STR_CUBE",
                 "DEPENDENT_AR",
                 "DEPENDENT_GB",
-                "?0x11" "DOT_REFLECT_SPECULAR_CONST",
+                "?0x11",
+                "DOT_REFLECT_SPECULAR_CONST",
             ]
             elements.append(f"3:{stage_3_mode[self.STAGE_3]}")
 
@@ -2074,18 +2075,18 @@ _SPARSE_NAME_MAP = {
 
 def _process_passthrough(_nv_class, _nv_op, nv_param) -> str:
     """Simply passes through the param value."""
-    return f"0x{nv_param:08X} => {nv_param}"
+    return f"{nv_param}"
 
 
 def _process_float_param(_nv_class, _nv_op, nv_param) -> str:
     """Treats the param value as an IEEE float"""
     float_val = struct.unpack("f", nv_param.to_bytes(4, byteorder=sys.byteorder))
-    return f"0x{nv_param:08X} => {float_val[0]}"
+    return f"{float_val[0]}"
 
 
 def _process_x_3_fixed_point(_nv_class, _nv_op, nv_param: int) -> str:
     """Treats the param as an x.3 fixed point value (no sign extension)."""
-    return f"0x{nv_param:08X} => {float(nv_param) / 8.0}"
+    return f"{float(nv_param) / 8.0}"
 
 
 def _process_boolean_param(_nv_class, _nv_op, nv_param) -> str:
@@ -2095,7 +2096,7 @@ def _process_boolean_param(_nv_class, _nv_op, nv_param) -> str:
     if nv_param == 1:
         return "TRUE"
 
-    return f"0x{nv_param:08X} => TRUE?"
+    return f"TRUE?"
 
 
 def _generate_process_double_uint16(low, high):
@@ -2935,11 +2936,11 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         StateArray(NV097_SET_VERTEX4F, 0x4, 4): _process_float_param,
         StateArray(NV097_SET_NORMAL3F, 0x4, 3): _process_float_param,
         NV097_SET_NORMAL3S: _process_passthrough,
-        NV097_SET_DIFFUSE_COLOR4F: _process_float_param,
+        StateArray(NV097_SET_DIFFUSE_COLOR4F, 0x4, 4): _process_float_param,
         StateArray(NV097_SET_DIFFUSE_COLOR3F, 0x4, 3): _process_float_param,
         NV097_SET_DIFFUSE_COLOR4I: _process_passthrough,
-        NV097_SET_SPECULAR_COLOR4F: _process_float_param,
-        NV097_SET_SPECULAR_COLOR3F: _process_float_param,
+        StateArray(NV097_SET_SPECULAR_COLOR4F, 0x4, 4): _process_float_param,
+        StateArray(NV097_SET_SPECULAR_COLOR3F, 0x4, 3): _process_float_param,
         NV097_SET_SPECULAR_COLOR4I: _process_passthrough,
         StateArray(NV097_SET_TEXCOORD0_2F, 0x4, 2): _process_float_param,
         NV097_SET_TEXCOORD0_2S: _generate_process_double_uint16("U", "V"),
@@ -3078,7 +3079,7 @@ class CommandInfo:
         processor_key = (self.nv_class, self.nv_op)
         processor = PROCESSORS.get(processor_key)
         if processor:
-            self.param_info = processor(self.nv_class, self.nv_op, self.nv_param)
+            self.param_info = f"{processor(self.nv_class, self.nv_op, self.nv_param)} <0x{self.nv_param:x}>"
         else:
             self.param_info = f"0x{self.nv_param:x}"
 
