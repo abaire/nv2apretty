@@ -77,7 +77,6 @@ if TYPE_CHECKING:
 
 _BITVECTOR_EXPANSION_RE = re.compile(r".*\{(.+)}")
 
-
 PRIMITIVE_OP_POINTS = 1
 
 
@@ -169,10 +168,13 @@ class CommonShaderState(PipelineState):
             pixel_shader_mode = elements[1]
             ret.append(f"\t\tStage {index}: {pixel_shader_mode}")
 
-            def explain(label: str, value: str | list[str] | list[list[str]]):
-                ret.append(f"\t\t\t{label}: {value}")
+            def explain(label: str, value: str | list[str] | list[list[str]], *, display_as_hex: bool = False):
+                if display_as_hex and isinstance(value, str):
+                    ret.append(f"\t\t\t{label}: 0x{int(value, 0):x}")
+                else:
+                    ret.append(f"\t\t\t{label}: {value}")
 
-            explain("Offset", self._process(NV097_SET_TEXTURE_OFFSET, default_raw_value=-1)[index])
+            explain("Offset", self._process(NV097_SET_TEXTURE_OFFSET, default_raw_value=-1)[index], display_as_hex=True)
 
             format_str = self._process(NV097_SET_TEXTURE_FORMAT, default_raw_value=0)[index]
             explain("Format", format_str)
@@ -196,7 +198,11 @@ class CommonShaderState(PipelineState):
 
             # Border color is only interesting if it is potentially used
             if "Border" in address_str:
-                explain("Border color", self._process(NV097_SET_TEXTURE_BORDER_COLOR, default_raw_value=0)[index])
+                explain(
+                    "Border color",
+                    self._process(NV097_SET_TEXTURE_BORDER_COLOR, default_raw_value=0)[index],
+                    display_as_hex=True,
+                )
 
             if pixel_shader_mode in {"BUMPENVMAP", "BUMPENVMAP_LUMINANCE"}:
                 explain(
