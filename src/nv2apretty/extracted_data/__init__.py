@@ -2078,6 +2078,11 @@ def _process_passthrough(_nv_class, _nv_op, nv_param) -> str:
     return f"{nv_param}"
 
 
+def _passthrough_hex_param(_nv_class, _nv_op, nv_param) -> str:
+    """Returns the param value as a hex string."""
+    return f"0x{nv_param:08x}"
+
+
 def _process_float_param(_nv_class, _nv_op, nv_param) -> str:
     """Treats the param value as an IEEE float"""
     float_val = struct.unpack("f", nv_param.to_bytes(4, byteorder=sys.byteorder))
@@ -2796,8 +2801,8 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         NV062_SET_CONTEXT_DMA_IMAGE_DESTIN: _process_passthrough,
         NV062_SET_COLOR_FORMAT: ParseNv062SetColorFormat,
         NV062_SET_PITCH: _generate_process_double_uint16("Source", "Destination"),
-        NV062_SET_OFFSET_SOURCE: _process_passthrough,
-        NV062_SET_OFFSET_DESTIN: _process_passthrough,
+        NV062_SET_OFFSET_SOURCE: _passthrough_hex_param,
+        NV062_SET_OFFSET_DESTIN: _passthrough_hex_param,
     },
     0x97: {
         NV097_SET_OBJECT: _process_passthrough,
@@ -2823,8 +2828,8 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         NV097_SET_SURFACE_CLIP_VERTICAL: _generate_process_double_uint16("Offset", "Size"),
         NV097_SET_SURFACE_FORMAT: _process_set_surface_format,
         NV097_SET_SURFACE_PITCH: _generate_process_double_uint16("Color", "Zeta"),
-        NV097_SET_SURFACE_COLOR_OFFSET: _process_passthrough,
-        NV097_SET_SURFACE_ZETA_OFFSET: _process_passthrough,
+        NV097_SET_SURFACE_COLOR_OFFSET: _passthrough_hex_param,
+        NV097_SET_SURFACE_ZETA_OFFSET: _passthrough_hex_param,
         StateArray(NV097_SET_COMBINER_ALPHA_ICW, 0x4, 8): _process_combiner_icw,
         NV097_SET_COMBINER_SPECULAR_FOG_CW0: _process_combiner_specular_fog_cw0,
         NV097_SET_COMBINER_SPECULAR_FOG_CW1: _process_combiner_specular_fog_cw1,
@@ -2965,7 +2970,7 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         NV097_SET_EDGE_FLAG: _process_passthrough,
         StateArray(NV097_SET_WEIGHT4F, 0x4, 4): _process_float_param,
         NV097_BREAK_VERTEX_BUFFER_CACHE: _process_passthrough,
-        StateArray(NV097_SET_VERTEX_DATA_ARRAY_OFFSET, 0x4, 16): _process_passthrough,
+        StateArray(NV097_SET_VERTEX_DATA_ARRAY_OFFSET, 0x4, 16): _passthrough_hex_param,
         StateArray(NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 0x4, 16): _process_vertex_data_array_format,
         StateArray(NV097_SET_BACK_SCENE_AMBIENT_COLOR, 0x4, 3): _process_float_param,
         NV097_SET_BACK_MATERIAL_ALPHA: _process_float_param,
@@ -2989,7 +2994,7 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         StateArray(NV097_SET_VERTEX_DATA4UB, 0x4, 16): _process_passthrough,
         NV097_SET_VERTEX_DATA4S_M: _process_passthrough,
         StateArray(NV097_SET_VERTEX_DATA4F_M, 0x4, 64): _process_float_param,
-        StateArray(NV097_SET_TEXTURE_OFFSET, 0x40, 4): _process_passthrough,
+        StateArray(NV097_SET_TEXTURE_OFFSET, 0x40, 4): _passthrough_hex_param,
         StateArray(NV097_SET_TEXTURE_FORMAT, 0x40, 4): _process_set_texture_format,
         StateArray(NV097_SET_TEXTURE_ADDRESS, 0x40, 4): _process_set_texture_address,
         StateArray(NV097_SET_TEXTURE_CONTROL0, 0x40, 4): _process_set_texture_control0,
@@ -3001,7 +3006,7 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         StructStateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_MAT, 0x40, 4, 0x4, 4): _process_float_param,
         StateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE, 0x40, 4): _process_float_param,
         StateArray(NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET, 0x40, 4): _process_float_param,
-        NV097_SET_SEMAPHORE_OFFSET: _process_passthrough,
+        NV097_SET_SEMAPHORE_OFFSET: _passthrough_hex_param,
         NV097_BACK_END_WRITE_SEMAPHORE_RELEASE: _process_passthrough,
         NV097_SET_ZMIN_MAX_CONTROL: ParseNv097SetZminMaxControl,
         NV097_SET_ANTI_ALIASING_CONTROL: ParseNv097SetAntiAliasingControl,
