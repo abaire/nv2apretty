@@ -508,6 +508,23 @@ def _process_draw_arrays(_nv_class, _nv_op, nv_param):
     return param_info + f" {fmt}"
 
 
+STENCIL_FUNCS: dict[int, str] = {
+    0x200: "NEVER",
+    0x201: "LESS",
+    0x202: "EQUAL",
+    0x203: "LEQUAL",
+    0x204: "GREATER",
+    0x205: "NOTEQUAL",
+    0x206: "GEQUAL",
+    0x207: "ALWAYS",
+}
+
+
+def _process_set_stencil_func(_nv_class, _nv_op, nv_param):
+    param_name = STENCIL_FUNCS.get(nv_param, "???")
+    return f"0x{nv_param:X} {param_name}"
+
+
 # See https://github.com/fgsfdsfgs/pbgl/blob/13fa676239f7de5a4189dd15a86979989adfe3fd/src/state.c#L315
 def _process_set_light_control(_nv_class, _nv_op, nv_param):
     param_info = "0x%X" % nv_param
@@ -2868,7 +2885,7 @@ CLASS_TO_COMMAND_PROCESSOR_MAP: dict[int, dict[int | StateArray | StructStateArr
         NV097_SET_COLOR_MASK: _process_color_mask,
         NV097_SET_DEPTH_MASK: _process_passthrough,
         NV097_SET_STENCIL_MASK: _process_passthrough,
-        NV097_SET_STENCIL_FUNC: _process_passthrough,
+        NV097_SET_STENCIL_FUNC: _process_set_stencil_func,
         NV097_SET_STENCIL_FUNC_REF: _process_passthrough,
         NV097_SET_STENCIL_FUNC_MASK: _process_passthrough,
         NV097_SET_STENCIL_OP_FAIL: ParseNv097SetStencilOpFail,
