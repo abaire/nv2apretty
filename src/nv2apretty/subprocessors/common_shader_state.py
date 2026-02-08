@@ -43,6 +43,7 @@ from nv2apretty.extracted_data import (
     NV097_SET_SHADER_OTHER_STAGE_INPUT,
     NV097_SET_SHADER_STAGE_PROGRAM,
     NV097_SET_SHADOW_DEPTH_FUNC,
+    NV097_SET_STENCIL_FUNC,
     NV097_SET_STENCIL_FUNC_MASK,
     NV097_SET_STENCIL_FUNC_REF,
     NV097_SET_STENCIL_MASK,
@@ -124,6 +125,7 @@ class CommonShaderState(PipelineState):
                 NV097_SET_SHADER_OTHER_STAGE_INPUT,
                 NV097_SET_SHADER_STAGE_PROGRAM,
                 NV097_SET_SHADOW_DEPTH_FUNC,
+                NV097_SET_STENCIL_FUNC,
                 NV097_SET_STENCIL_FUNC_MASK,
                 NV097_SET_STENCIL_FUNC_REF,
                 NV097_SET_STENCIL_MASK,
@@ -303,6 +305,7 @@ class CommonShaderState(PipelineState):
 
         def render_stencil_state(suffix: str, _: int):
             ret.append(f"\tStencil testing:{suffix}")
+            ret.append(f"\t\tFunc: {self._process(NV097_SET_STENCIL_FUNC)}")
             ret.append(f"\t\tTest mask: {self._process(NV097_SET_STENCIL_FUNC_MASK)}")
             ret.append(f"\t\tRef value: {self._process(NV097_SET_STENCIL_FUNC_REF)}")
             ret.append(f"\t\tFail op: {self._process(NV097_SET_STENCIL_OP_FAIL)}")
