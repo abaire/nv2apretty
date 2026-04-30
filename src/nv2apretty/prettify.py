@@ -17,6 +17,7 @@ nv2a_pgraph_method 0: NV20_KELVIN_PRIMITIVE<0x97> -> NV097_SET_COMBINER_SPECULAR
 # ruff: noqa: FBT001 Boolean-typed positional argument in function definition
 # ruff: noqa: FBT002 Boolean default positional argument in function definition
 # ruff: noqa: UP031 Use format specifiers instead of percent format
+# ruff: noqa: T201 'print' found
 
 from __future__ import annotations
 
@@ -193,6 +194,8 @@ def _process_file(
     suppress_frame_summaries: bool = False,
     suppress_file_summaries: bool = False,
     summary_output_stream: TextIO = sys.stderr,
+    drop_first_frame: bool = False,
+    no_detect_xemu_state_dump: bool = False,
 ) -> None:
     inside_begin_end = False
     elided_commands: dict[tuple[int, int, int], list[int]] = defaultdict(list)
@@ -206,10 +209,19 @@ def _process_file(
         del args
         del kwargs
 
-    raw = nop if suppress_raw_commands else print
-    draw_summary = nop if suppress_draw_summaries else print
-    frame_summary = nop if suppress_frame_summaries else print
-    file_summary = nop if suppress_file_summaries else print
+    frame_number = 0
+    in_xemu_state_dump = False
+
+    def masked_print(*args, **kwargs):
+        if frame_number or in_xemu_state_dump:
+            print(*args, **kwargs)
+
+    print_func = masked_print if drop_first_frame else print
+
+    raw = nop if suppress_raw_commands else print_func
+    draw_summary = nop if suppress_draw_summaries else print_func
+    frame_summary = nop if suppress_frame_summaries else print_func
+    file_summary = nop if suppress_file_summaries else print_func
 
     def _print_elided_command_summary(elided_commands):
         for (channel, nv_class, nv_op), params in elided_commands.items():
@@ -246,6 +258,14 @@ def _process_file(
         raw(f"nv2a_pgraph_method_unhandled {entry.pretty_suffix}{param_text}")
 
     for line in lines:
+        if not no_detect_xemu_state_dump and line.startswith("nv2a_pgraph_method_unhandled 255: 0xff -> 0xdeadbeef "):
+            in_xemu_state_dump = not in_xemu_state_dump
+            if in_xemu_state_dump:
+                print("!!!! START xemu STATE DUMP !!!!")
+            else:
+                print("!!!! END xemu STATE DUMP !!!!\n\n\n\n")
+            continue
+
         match = _PGRAPH_MESSAGE_HACK_RE.match(line)
         if match:
             raw(match.group(1))
@@ -392,9 +412,14 @@ def _process_file(
                 if add_blanks_after_flip:
                     raw("\n")
 
-                log_frame_summaries.append(current_frame_summary)
-                current_frame_summary = copy.deepcopy(current_frame_summary)
+                if not drop_first_frame or frame_number:
+                    log_frame_summaries.append(current_frame_summary)
+                    current_frame_summary = copy.deepcopy(current_frame_summary)
                 current_frame_summary.reset()
+                frame_number += 1
+                if drop_first_frame and frame_number == 1:
+                    raw("First full frame start:")
+
             elif tracer_mode and block_marker in {
                 Tag.CLEAR_SURFACE_TAG,
                 Tag.SEMAPHORE_RELEASE_TAG,
@@ -453,6 +478,8 @@ def prettify(
     suppress_frame_summaries: bool = False,
     suppress_file_summaries: bool = False,
     summary_output_stream: TextIO | None = None,
+    drop_first_frame: bool = False,
+    no_detect_xemu_state_dump: bool = False,
 ):
     """Prettifies the given nv2a log lines."""
     if output:
@@ -472,6 +499,8 @@ def prettify(
                 suppress_frame_summaries=suppress_frame_summaries,
                 suppress_file_summaries=suppress_file_summaries,
                 summary_output_stream=sys.stdout,
+                drop_first_frame=drop_first_frame,
+                no_detect_xemu_state_dump=no_detect_xemu_state_dump,
             )
     else:
         _process_file(
@@ -488,6 +517,8 @@ def prettify(
             suppress_frame_summaries=suppress_frame_summaries,
             suppress_file_summaries=suppress_file_summaries,
             summary_output_stream=summary_output_stream if summary_output_stream else sys.stderr,
+            drop_first_frame=drop_first_frame,
+            no_detect_xemu_state_dump=no_detect_xemu_state_dump,
         )
 
 
@@ -515,6 +546,8 @@ def _main(args):
         suppress_raw_commands=args.summarize_frames_only or args.summarize_only,
         suppress_draw_summaries=args.summarize_frames_only,
         summary_output_stream=summary_output_stream,
+        drop_first_frame=args.drop_first_frame,
+        no_detect_xemu_state_dump=args.no_detect_xemu_state_dump,
     )
 
 
@@ -585,6 +618,20 @@ def entrypoint():
         )
         parser.add_argument(
             "--summarize-to-stderr", action="store_true", help="Writes summary information to stderr instead of stdout"
+        )
+        parser.add_argument(
+            "--drop-first-frame",
+            "-D",
+            action="store_true",
+            help="Ignores data before the first frame flip (useful if the trace did not start on a frame boundary)",
+        )
+        parser.add_argument(
+            "--no-detect-xemu-state-dump",
+            action="store_true",
+            help=(
+                "Suppresses special handling of xemu state dump header from "
+                "https://github.com/abaire/xemu/tree/debug/dump_full_state_and_trace_with_f9"
+            ),
         )
         return parser.parse_args()
 
