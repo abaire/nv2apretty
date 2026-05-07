@@ -37,6 +37,7 @@ from nv2a_vsh import disassemble
 
 import nv2apretty.extracted_data as deep_processing
 from nv2apretty import pvideo
+from nv2apretty.__about__ import __version__
 from nv2apretty.subprocessors.frame_summary import FrameSummary
 
 if TYPE_CHECKING:
@@ -141,6 +142,7 @@ def _process_pgraph_command(channel, nv_class, nv_op, nv_param) -> tuple[Tag | N
     return None, None
 
 
+NV097_SET_TRANSFORM_PROGRAM_LOAD = 0x1E9C
 NV097_SET_TRANSFORM_PROGRAM_START = 0x1EA0
 NV097_SET_TRANSFORM_PROGRAM_RANGE_BASE = 0x0B00
 NV097_SET_TRANSFORM_PROGRAM_RANGE_END = 0x0B7C
@@ -306,7 +308,10 @@ def _process_file(
                     raw(current_frame_summary.active_shader)
                     raw()
                     shader_program.clear()
-            elif current_frame_summary.pipeline == FrameSummary.PIPELINE_UNKNOWN and is_vertex_shader_upload:
+            if (
+                current_frame_summary.pipeline in {FrameSummary.PIPELINE_UNKNOWN, FrameSummary.PIPELINE_ASSUMED_FIXED}
+                and is_vertex_shader_upload
+            ):
                 # Assume that the pipeline is programmable if the program is uploading a vertex shader.
                 current_frame_summary.pipeline = FrameSummary.PIPELINE_ASSUMED_PROGRAMMABLE
 
@@ -555,6 +560,7 @@ def entrypoint():
     def _parse_args():
         parser = argparse.ArgumentParser()
 
+        parser.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
         parser.add_argument("input", help="Input file.")
         parser.add_argument("output", nargs="?", help="Output file.")
         parser.add_argument(
