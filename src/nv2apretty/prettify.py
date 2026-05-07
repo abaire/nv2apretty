@@ -141,6 +141,7 @@ def _process_pgraph_command(channel, nv_class, nv_op, nv_param) -> tuple[Tag | N
     return None, None
 
 
+NV097_SET_TRANSFORM_PROGRAM_LOAD = 0x1E9C
 NV097_SET_TRANSFORM_PROGRAM_START = 0x1EA0
 NV097_SET_TRANSFORM_PROGRAM_RANGE_BASE = 0x0B00
 NV097_SET_TRANSFORM_PROGRAM_RANGE_END = 0x0B7C
@@ -306,7 +307,10 @@ def _process_file(
                     raw(current_frame_summary.active_shader)
                     raw()
                     shader_program.clear()
-            elif current_frame_summary.pipeline == FrameSummary.PIPELINE_UNKNOWN and is_vertex_shader_upload:
+            if (
+                current_frame_summary.pipeline in {FrameSummary.PIPELINE_UNKNOWN, FrameSummary.PIPELINE_ASSUMED_FIXED}
+                and is_vertex_shader_upload
+            ):
                 # Assume that the pipeline is programmable if the program is uploading a vertex shader.
                 current_frame_summary.pipeline = FrameSummary.PIPELINE_ASSUMED_PROGRAMMABLE
 
