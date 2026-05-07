@@ -37,6 +37,7 @@ from nv2a_vsh import disassemble
 
 import nv2apretty.extracted_data as deep_processing
 from nv2apretty import pvideo
+from nv2apretty.__about__ import __version__
 from nv2apretty.subprocessors.frame_summary import FrameSummary
 
 if TYPE_CHECKING:
@@ -559,6 +560,7 @@ def entrypoint():
     def _parse_args():
         parser = argparse.ArgumentParser()
 
+        parser.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
         parser.add_argument("input", help="Input file.")
         parser.add_argument("output", nargs="?", help="Output file.")
         parser.add_argument(
