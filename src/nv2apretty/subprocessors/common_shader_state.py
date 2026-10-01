@@ -176,7 +176,7 @@ class CommonShaderState(PipelineState):
                 else:
                     ret.append(f"\t\t\t{label}: {value}")
 
-            explain("Offset", self._process(NV097_SET_TEXTURE_OFFSET, default_raw_value=-1)[index], display_as_hex=True)
+            explain("Offset", self._process(NV097_SET_TEXTURE_OFFSET, default_raw_value=0)[index], display_as_hex=True)
 
             format_str = self._process(NV097_SET_TEXTURE_FORMAT, default_raw_value=0)[index]
             explain("Format", format_str)
