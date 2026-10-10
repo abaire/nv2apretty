@@ -38,6 +38,20 @@ from nv2a_vsh import disassemble
 import nv2apretty.extracted_data as deep_processing
 from nv2apretty import pvideo
 from nv2apretty.__about__ import __version__
+from nv2apretty.extracted_data import (
+    NV097_BACK_END_WRITE_SEMAPHORE_RELEASE,
+    NV097_CLEAR_SURFACE,
+    NV097_FLIP_STALL,
+    NV097_INLINE_ARRAY,
+    NV097_SET_BEGIN_END,
+    NV097_SET_TRANSFORM_EXECUTION_MODE,
+)
+from nv2apretty.inline_array import (
+    NV097_SET_VERTEX_DATA_ARRAY_FORMAT_BASE,
+    NV097_SET_VERTEX_DATA_ARRAY_FORMAT_COUNT,
+    NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE,
+    InlineArrayTracker,
+)
 from nv2apretty.subprocessors.frame_summary import FrameSummary
 
 if TYPE_CHECKING:
@@ -119,19 +133,19 @@ def _process_pgraph_command(channel, nv_class, nv_op, nv_param) -> tuple[Tag | N
     if nv_class != 0x97:
         return None, None
 
-    if nv_op == 0x17FC:
+    if nv_op == NV097_SET_BEGIN_END:
         return Tag.END_TAG if not nv_param else Tag.BEGIN_TAG, None
 
-    if nv_op == 0x130:
+    if nv_op == NV097_FLIP_STALL:
         return Tag.FLIP_STALL_TAG, None
 
-    if nv_op == 0x1D70:
+    if nv_op == NV097_BACK_END_WRITE_SEMAPHORE_RELEASE:
         return Tag.SEMAPHORE_RELEASE_TAG, None
 
-    if nv_op == 0x1D94:
+    if nv_op == NV097_CLEAR_SURFACE:
         return Tag.CLEAR_SURFACE_TAG, None
 
-    if nv_op == 0x1E94:
+    if nv_op == NV097_SET_TRANSFORM_EXECUTION_MODE:
         if (nv_param & 0x02) == 0x00:
             return Tag.PIPELINE, FrameSummary.PIPELINE_FIXED
         return Tag.PIPELINE, FrameSummary.PIPELINE_PROGRAMMABLE
@@ -206,6 +220,7 @@ def _process_file(
 
     log_frame_summaries: list[FrameSummary] = []
     current_frame_summary = FrameSummary()
+    inline_array_tracker = InlineArrayTracker()
 
     def nop(*args, **kwargs):
         del args
@@ -317,6 +332,19 @@ def _process_file(
 
             if nv_class == 0x97:
                 current_frame_summary.update(nv_op, nv_param)
+                format_range_end = (
+                    NV097_SET_VERTEX_DATA_ARRAY_FORMAT_BASE
+                    + NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE * NV097_SET_VERTEX_DATA_ARRAY_FORMAT_COUNT
+                )
+                if (
+                    NV097_SET_VERTEX_DATA_ARRAY_FORMAT_BASE <= nv_op < format_range_end
+                    and (nv_op - NV097_SET_VERTEX_DATA_ARRAY_FORMAT_BASE) % NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
+                    == 0
+                ):
+                    input_index = (
+                        nv_op - NV097_SET_VERTEX_DATA_ARRAY_FORMAT_BASE
+                    ) // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
+                    inline_array_tracker.set_format(input_index, nv_param)
 
             block_marker, summary_text = _process_pgraph_command(channel, nv_class, nv_op, nv_param)
 
@@ -335,10 +363,13 @@ def _process_file(
                 elided_commands[(channel, nv_class, nv_op)].append(nv_param)
             else:
                 result = _prettify_pgraph_method(channel, nv_class, nv_op, nv_param)
+                if nv_class == 0x97 and nv_op == NV097_INLINE_ARRAY:
+                    result.param_info = inline_array_tracker.process_inline_array_param(nv_param)
                 raw(result.get_pretty_string())
 
             if block_marker == Tag.BEGIN_TAG:
                 inside_begin_end = True
+                inline_array_tracker.begin_draw()
                 if tracer_mode:
                     raw(
                         f"frame_draw {current_frame_summary.frame_draw_count} surface_dump {current_frame_summary.surface_dump_count}"
@@ -346,6 +377,7 @@ def _process_file(
                     current_frame_summary.surface_dump_count += 1
                 current_frame_summary.draw_begin(nv_param)
             elif block_marker == Tag.END_TAG:
+                inline_array_tracker.end_draw()
                 if summarize:
                     draw_summary(
                         f"== Draw {current_frame_summary.frame_draw_count - 1} summary: ============",
